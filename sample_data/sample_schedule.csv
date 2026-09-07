@@ -1,0 +1,6 @@
+activity_code,activity_name,wbs_code,wbs_level,discipline,planned_start,planned_finish
+CIV-001,Excavate foundation for Pump P-01,WBS-CIV-01,L5,Civil,2026-01-05,2026-01-09
+CIV-002,Cast foundation for Pump P-01,WBS-CIV-01,L5,Civil,2026-01-10,2026-01-14
+PIP-102,Erect Line 24-XX,WBS-PIP-01,L5,Piping,2026-01-10,2026-01-15
+PIP-103,Install spool at Unit 24,WBS-PIP-01,L6,Piping,2026-01-16,2026-01-18
+ELE-081,Cable laying for Pump House,WBS-ELE-01,L5,Electrical,2026-01-20,2026-01-25

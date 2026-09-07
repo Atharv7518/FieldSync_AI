@@ -1,0 +1,13 @@
+# Python environment
+backend/venv/
+__pycache__/
+*.pyc
+
+# Secrets
+backend/.env
+
+# Uploaded files will later be stored elsewhere
+uploads/
+
+# VS Code settings
+.vscode/

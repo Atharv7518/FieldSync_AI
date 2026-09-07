@@ -1,0 +1,320 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>SiteSync | Intelligent Progress Tracker</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+
+<body>
+  <header class="topbar">
+    <div>
+      <p class="eyebrow">Oil India Limited</p>
+      <h1>FieldSync</h1>
+      <p class="subtitle">Intelligent Progress Capture & Schedule Linking</p>
+    </div>
+
+    <div class="api-status">
+      <span id="apiDot" class="status-dot"></span>
+      <span id="apiStatus">Checking API...</span>
+    </div>
+  </header>
+
+  <main class="container">
+    <section class="welcome-row">
+      <div>
+        <h2>Project Progress Dashboard</h2>
+        <p>Capture site progress, link it to schedule activities, and review AI suggestions.</p>
+      </div>
+
+      <button id="refreshButton" class="secondary-button">
+        Refresh Dashboard
+      </button>
+    </section>
+
+    <section class="stats-grid">
+      <article class="stat-card blue">
+        <p>Schedule Activities</p>
+        <strong id="activityCount">0</strong>
+      </article>
+
+      <article class="stat-card green">
+        <p>Completed Activities</p>
+        <strong id="completedCount">0</strong>
+      </article>
+
+      <article class="stat-card orange">
+        <p>Captured Progress Events</p>
+        <strong id="eventCount">0</strong>
+      </article>
+
+      <article class="stat-card red">
+        <p>Pending Planner Reviews</p>
+        <strong id="pendingCount">0</strong>
+      </article>
+
+      <article class="stat-card red">
+  <p>Delayed Activities</p>
+  <strong id="delayedCount">0</strong>
+</article>
+
+<article class="stat-card purple">
+  <p>Unmatched Progress Events</p>
+  <strong id="unmatchedCount">0</strong>
+</article>
+    </section>
+
+    <p id="messageBox" class="message-box hidden"></p>
+
+    <section class="action-grid">
+      <article class="panel">
+        <h3>Submit Daily Progress Report</h3>
+        <p class="panel-description">
+          A supervisor can write a natural-language site update here.
+        </p>
+
+        <form id="reportForm">
+          <label for="reportText">Site progress update</label>
+
+          <textarea
+            id="reportText"
+            required
+            minlength="5"
+            placeholder="Example: Daily Progress Report - 15 January 2026. Piping team completed spool erection near Unit 24. Civil team started excavation for Pump P-01 foundation."
+          ></textarea>
+
+          <div class="voice-agent-row">
+  <button id="voiceButton" type="button" class="voice-button">
+    🎙 Start Voice Time Agent
+  </button>
+
+  <span id="voiceStatus">
+    Speak a site-progress update in English.
+  </span>
+</div>
+
+          <button type="submit" class="primary-button">
+            Save Report
+          </button>
+        </form>
+      </article>
+
+      <article class="panel">
+        <h3>Upload Baseline Schedule</h3>
+        <p class="panel-description">
+          Upload Primavera/MS Project schedule exported as CSV or Excel.
+        </p>
+
+        <form id="scheduleUploadForm">
+          <label for="scheduleFile">Schedule file (.csv or .xlsx)</label>
+
+          <input
+            id="scheduleFile"
+            type="file"
+            accept=".csv,.xlsx"
+            required
+          />
+
+          <button type="submit" class="primary-button">
+            Upload Schedule
+          </button>
+        </form>
+      </article>
+
+      <article class="panel">
+        <h3>Upload Discipline Progress Sheet</h3>
+        <p class="panel-description">
+          Upload Civil, Piping, or Electrical progress report in CSV/Excel format.
+        </p>
+
+        <form id="progressSheetForm">
+          <label for="progressSheetFile">Progress sheet (.csv or .xlsx)</label>
+
+          <input
+            id="progressSheetFile"
+            type="file"
+            accept=".csv,.xlsx"
+            required
+          />
+
+          <button type="submit" class="primary-button">
+            Upload Progress Sheet
+          </button>
+        </form>
+      </article>
+    </section>
+
+    <section class="panel full-panel">
+      <div class="section-heading">
+        <div>
+          <h3>Baseline Schedule Activities</h3>
+          <p>Planned versus actual execution status.</p>
+        </div>
+      </div>
+
+      <div class="table-wrapper">
+        <table>
+          <thead>
+            <tr>
+              <th>Activity ID</th>
+              <th>Activity</th>
+              <th>Discipline</th>
+              <th>Planned Finish</th>
+              <th>Actual Finish</th>
+              <th>Status</th>
+            </tr>
+          </thead>
+
+          <tbody id="activityTableBody">
+            <tr>
+              <td colspan="6" class="empty-cell">Loading activities...</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <section class="panel full-panel">
+      <div class="section-heading">
+        <div>
+          <h3>Planner Review Queue</h3>
+          <p>AI-generated matches waiting for approval or rejection.</p>
+        </div>
+      </div>
+
+      <div id="pendingMatchList" class="match-list">
+        <p class="empty-cell">Loading pending matches...</p>
+      </div>
+    </section>
+
+    <section class="panel full-panel">
+  <div class="section-heading">
+    <div>
+      <h3>Extracted Progress Events</h3>
+      <p>Events found from text reports and discipline spreadsheets.</p>
+    </div>
+  </div>
+
+  <div class="table-wrapper">
+    <table>
+      <thead>
+        <tr>
+          <th>Event ID</th>
+          <th>Reported Activity</th>
+          <th>Discipline</th>
+          <th>Event Type</th>
+          <th>Date</th>
+          <th>Confidence</th>
+          <th>Action</th>
+        </tr>
+      </thead>
+
+      <tbody id="eventTableBody">
+        <tr>
+          <td colspan="7" class="empty-cell">Loading events...</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<section class="panel full-panel">
+  <div class="section-heading">
+    <div>
+      <h3>Discipline-Wise Progress Analytics</h3>
+      <p>Progress and delay-risk summary by engineering discipline.</p>
+    </div>
+  </div>
+
+  <div class="table-wrapper">
+    <table>
+      <thead>
+        <tr>
+          <th>Discipline</th>
+          <th>Total</th>
+          <th>Completed</th>
+          <th>In Progress</th>
+          <th>Not Started</th>
+          <th>Delayed</th>
+        </tr>
+      </thead>
+
+      <tbody id="disciplineTableBody">
+        <tr>
+          <td colspan="6" class="empty-cell">Loading analytics...</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<section class="panel full-panel">
+  <div class="section-heading">
+    <div>
+      <h3>Institutional Memory</h3>
+      <p>
+        Historical execution patterns that future projects can use for
+        planning and estimation.
+      </p>
+    </div>
+  </div>
+
+  <div class="table-wrapper">
+    <table>
+      <thead>
+        <tr>
+          <th>Discipline</th>
+          <th>Completed Activities</th>
+          <th>Delayed Activities</th>
+          <th>Avg Planned Duration</th>
+          <th>Avg Actual Duration</th>
+        </tr>
+      </thead>
+
+      <tbody id="memoryTableBody">
+        <tr>
+          <td colspan="5" class="empty-cell">
+            Loading institutional memory...
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<section class="panel full-panel">
+  <div class="section-heading">
+    <div>
+      <h3>Audit Trail</h3>
+      <p>Traceable history of planner decisions and schedule updates.</p>
+    </div>
+  </div>
+
+  <div class="table-wrapper">
+    <table>
+      <thead>
+        <tr>
+          <th>Time</th>
+          <th>Entity</th>
+          <th>Action</th>
+          <th>Previous Value</th>
+          <th>New Value</th>
+        </tr>
+      </thead>
+
+      <tbody id="auditTableBody">
+        <tr>
+          <td colspan="5" class="empty-cell">
+            Loading audit records...
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+  </main>
+
+  <script src="script.js"></script>
+</body>
+</html>
