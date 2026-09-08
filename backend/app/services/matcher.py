@@ -1,16 +1,6 @@
 import re
-
-from rapidfuzz import process, fuzz
-from sentence_transformers import SentenceTransformer, util
-
+from rapidfuzz import fuzz
 from app.models import ProgressEvent, ScheduleActivity
-
-
-MODEL_NAME = "sentence-transformers/all-MiniLM-L6-v2"
-
-# The model loads only when the first AI match is requested.
-embedding_model = None
-
 
 SYNONYMS = {
     "erected": "erect",
@@ -26,80 +16,21 @@ SYNONYMS = {
     "near": "",
 }
 
-def match_schedule_activity(extracted_text, schedule_tasks):
-    # schedule_tasks is a list of plan task descriptions
-    match, score, idx = process.extractOne(
-        extracted_text, 
-        schedule_tasks, 
-        scorer=fuzz.token_sort_ratio
-    )
-    return match, score
-
-def get_embedding_model():
-    """Loads the semantic AI model once and reuses it."""
-
-    global embedding_model
-
-    if embedding_model is None:
-        embedding_model = SentenceTransformer(MODEL_NAME)
-
-    return embedding_model
-
 
 def normalize_text(text: str) -> str:
-    """Cleans engineering text for RapidFuzz comparison."""
-
+    """Cleans engineering text for fuzzy token matching."""
+    if not text:
+        return ""
     normalized = text.lower()
     normalized = re.sub(r"[^a-z0-9\s]", " ", normalized)
 
     words = []
-
     for word in normalized.split():
         cleaned_word = SYNONYMS.get(word, word)
-
         if cleaned_word:
             words.append(cleaned_word)
 
     return " ".join(words)
-
-
-def calculate_fuzzy_score(
-    event_description: str,
-    activity_name: str,
-) -> float:
-    """RapidFuzz score from 0 to 100."""
-
-    return round(
-        fuzz.token_set_ratio(
-            normalize_text(event_description),
-            normalize_text(activity_name),
-        ),
-        2,
-    )
-
-
-def calculate_semantic_score(
-    event_description: str,
-    activity_name: str,
-) -> float:
-    """Sentence Transformer semantic score from 0 to 100."""
-
-    model = get_embedding_model()
-
-    embeddings = model.encode(
-        [event_description, activity_name],
-        convert_to_tensor=True,
-        normalize_embeddings=True,
-    )
-
-    similarity = util.cos_sim(
-        embeddings[0],
-        embeddings[1],
-    ).item()
-
-    # Cosine similarity is usually between 0 and 1.
-    # Convert it to a 0-100 score for the dashboard.
-    return round(max(0, similarity) * 100, 2)
 
 
 def calculate_hybrid_score(
@@ -107,25 +38,21 @@ def calculate_hybrid_score(
     activity_name: str,
 ) -> float:
     """
-    Combines keyword similarity and semantic similarity.
-    RapidFuzz: 55%
-    Sentence Transformer: 45%
+    Computes a lightweight, zero-RAM hybrid similarity score (0 to 100):
+    - token_set_ratio (60%): Handles subset phrases and extra descriptor words
+    - token_sort_ratio (40%): Evaluates strict token overlap regardless of word order
     """
+    cleaned_event = normalize_text(event_description)
+    cleaned_activity = normalize_text(activity_name)
 
-    fuzzy_score = calculate_fuzzy_score(
-        event_description,
-        activity_name,
-    )
+    if not cleaned_event or not cleaned_activity:
+        return 0.0
 
-    semantic_score = calculate_semantic_score(
-        event_description,
-        activity_name,
-    )
+    set_score = fuzz.token_set_ratio(cleaned_event, cleaned_activity)
+    sort_score = fuzz.token_sort_ratio(cleaned_event, cleaned_activity)
 
-    return round(
-        (fuzzy_score * 0.55) + (semantic_score * 0.45),
-        2,
-    )
+    hybrid_score = (set_score * 0.60) + (sort_score * 0.40)
+    return round(hybrid_score, 2)
 
 
 def find_best_schedule_match(
@@ -134,26 +61,24 @@ def find_best_schedule_match(
 ) -> tuple[ScheduleActivity, float]:
     """
     Finds the best matching schedule activity.
-    Same-discipline activities are preferred.
+    Same-discipline activities are prioritized when discipline data is present.
     """
+    if not activities:
+        raise ValueError("No schedule activities are available for matching.")
 
+    # Filter by discipline if present
     if event.discipline:
         discipline_candidates = [
             activity
             for activity in activities
             if activity.discipline
-            and activity.discipline.lower() == event.discipline.lower()
+            and activity.discipline.strip().lower() == event.discipline.strip().lower()
         ]
-
         candidates = discipline_candidates or activities
     else:
         candidates = activities
 
-    if not candidates:
-        raise ValueError("No schedule activities are available for matching.")
-
     best_activity = candidates[0]
-
     best_score = calculate_hybrid_score(
         event.reported_description,
         best_activity.activity_name,
@@ -164,7 +89,6 @@ def find_best_schedule_match(
             event.reported_description,
             activity.activity_name,
         )
-
         if score > best_score:
             best_activity = activity
             best_score = score
