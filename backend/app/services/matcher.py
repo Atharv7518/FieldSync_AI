@@ -1,6 +1,6 @@
 import re
 
-from rapidfuzz import fuzz
+from rapidfuzz import process, fuzz
 from sentence_transformers import SentenceTransformer, util
 
 from app.models import ProgressEvent, ScheduleActivity
@@ -26,6 +26,14 @@ SYNONYMS = {
     "near": "",
 }
 
+def match_schedule_activity(extracted_text, schedule_tasks):
+    # schedule_tasks is a list of plan task descriptions
+    match, score, idx = process.extractOne(
+        extracted_text, 
+        schedule_tasks, 
+        scorer=fuzz.token_sort_ratio
+    )
+    return match, score
 
 def get_embedding_model():
     """Loads the semantic AI model once and reuses it."""
