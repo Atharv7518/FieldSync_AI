@@ -188,21 +188,36 @@ tbody tr:hover { background-color: rgba(255, 255, 255, 0.03); }
 }
 
 /* ==========================================================================
-   Frappe Gantt Dark Theme Overrides
+   Frappe Gantt Dark Theme Overrides (High Contrast Fix)
    ========================================================================== */
-.gantt .grid-background { fill: var(--page-bg); }
-.gantt .grid-header { fill: var(--brand-navy); }
-.gantt .grid-row { fill: var(--card-bg); }
-.gantt .grid-row:nth-child(even) { fill: var(--page-bg); }
-.gantt .tick line { stroke: var(--border); }
-.gantt .tick text { fill: var(--text-muted); font-family: 'Inter', sans-serif; }
-.gantt .bar-label { fill: #ffffff; font-weight: 600; font-size: 12px; }
+.gantt .grid-background { fill: var(--page-bg) !important; }
+.gantt .grid-header { fill: var(--brand-navy) !important; }
+.gantt .grid-row { fill: var(--card-bg) !important; }
+.gantt .grid-row:nth-child(even) { fill: var(--page-bg) !important; }
+.gantt .tick line { stroke: var(--border) !important; }
 
-/* Bar Colors based on Status */
-.gantt .bar-progress { fill: var(--brand-green); }
-.gantt .bar { fill: var(--brand-teal); stroke: var(--card-bg); stroke-width: 2; }
+/* 1. Fix Header Dates Text (January, 09, 16, etc.) */
+.gantt .upper-text, 
+.gantt .lower-text { 
+  fill: #ffffff !important; 
+  font-family: 'Inter', sans-serif !important; 
+  font-size: 13px !important;
+  font-weight: 500 !important;
+}
 
-/* Custom Popup */
+/* 2. Fix Activity Text Inside & Outside the Bars */
+.gantt .bar-label,
+.gantt .bar-label.big { 
+  fill: #ffffff !important; 
+  font-weight: 600 !important; 
+  font-size: 13px !important; 
+}
+
+/* 3. Bar Colors */
+.gantt .bar-progress { fill: var(--brand-green) !important; }
+.gantt .bar { fill: var(--brand-teal) !important; stroke: var(--card-bg) !important; stroke-width: 2 !important; }
+
+/* 4. Fix Hover Popup */
 .gantt-popup {
   background: var(--brand-navy) !important;
   border: 1px solid var(--border) !important;
