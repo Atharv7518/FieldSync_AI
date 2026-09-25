@@ -1,4 +1,36 @@
 discipline,activity_description,status,event_date,progress_percent
-Piping,Spool erection near Unit 24,completed,2026-01-15,100
-Civil,Excavation for Pump P-01 foundation,started,2026-01-15,15
-Electrical,Cable laying for Pump House,completed,2026-01-15,100
+Civil,Site grading and clearing of Main Plant is done,completed,2026-01-06,100
+Civil,Started earthwork and excavation for P-01 pump,started,2026-01-07,15
+Civil,Ongoing rebar and shuttering work for P-01,progress,2026-01-12,50
+Civil,Finished pouring concrete for P-01 foundation,completed,2026-01-16,100
+Civil,Curing of pump 1 foundation is ongoing,in progress,2026-01-19,60
+Civil,Began digging compressor C-101 block,started,2026-01-17,20
+Civil,Compaction and backfill for C-101 finished,completed,2026-01-28,100
+Mechanical,Pump P-01 arrived and inspected,completed,2026-01-24,100
+Mechanical,Pump P-01 lifted and placed on concrete base,completed,2026-01-27,100
+Mechanical,Grouting and final alignment of P-01 pump,in progress,2026-01-29,75
+Mechanical,Started placing compressor C-101,started,2026-02-06,20
+Mechanical,Lube oil skid for compressor installed,completed,2026-02-14,100
+Mechanical,Tank T-501 shell erection is underway,progress,2026-01-20,45
+Mechanical,Hydrotest for T-501 tank successfully finished,completed,2026-02-05,100
+Piping,Cooling water spool fab in workshop,ongoing,2026-01-12,40
+Piping,CW spool fabrication is entirely done,completed,2026-01-20,100
+Piping,Erecting cooling water lines at Unit 24,progress,2026-01-30,65
+Piping,Unit 24 CW spool welding is half done,in progress,2026-02-01,50
+Piping,Radiography testing of CW joints commenced,started,2026-02-09,10
+Piping,Successfully completed CW line hydrotest,completed,2026-02-16,100
+Piping,Lube oil piping prefab started,started,2026-02-02,15
+Piping,Erecting lube oil lines at C-101,ongoing,2026-02-15,30
+Piping,Bolting and torqueing of P-01 flanges completed,completed,2026-02-02,100
+Electrical,Primary cable tray laying in Plant A,progress,2026-01-18,50
+Electrical,Plant A cable trays completely installed,completed,2026-01-25,100
+Electrical,HT cable pulling to main sub-station started,started,2026-01-27,10
+Electrical,Termination of HT cables is currently happening,in progress,2026-02-14,60
+Electrical,11kV Switchgear panel erection completed,completed,2026-02-05,100
+Electrical,Mounting MCC panels,ongoing,2026-02-08,70
+Electrical,Installed LPBS for pump P-01,completed,2026-02-06,100
+Electrical,Megger test for P-01 cables finished,completed,2026-02-09,100
+Instrumentation,Instrument cable tray layout started,started,2026-01-16,15
+Instrumentation,Field JBs are being mounted,in progress,2026-02-03,40
+Instrumentation,Completed bench calibration of PTs,completed,2026-01-25,100
+Instrumentation,Mounted pressure and temp transmitters at P-01,completed,2026-02-07,100

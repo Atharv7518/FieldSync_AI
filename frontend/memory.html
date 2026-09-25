@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>FieldSync | Memory</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link rel="stylesheet" href="style.css" />
+  <script>if (!localStorage.getItem('fieldSyncSession')) window.location.href = 'auth.html';</script>
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand-group">
+      <div class="brand-container"><div class="logo-icon"><img src="logo.png" alt="FieldSync Logo"></div><div class="brand-text"><p class="eyebrow"><i class="fa-solid fa-building"></i> Company</p><h1>FieldSync</h1></div></div>
+      <nav class="nav-menu">
+        <a href="index.html">Dashboard</a>
+        <a href="capture.html">Data Capture</a>
+        <a href="events.html">Progress Events</a>
+        <a href="memory.html" class="active">Institutional Memory</a>
+        <a href="audit.html">Audit Trail</a>
+      </nav>
+    </div>
+  </header>
+
+  <main class="container">
+    <div class="welcome-row">
+      <div class="welcome-text"><h2>Institutional Memory</h2><p>Historical execution patterns to improve future project estimations.</p></div>
+    </div>
+    <section class="panel full-panel">
+      <div class="table-wrapper">
+        <table>
+          <thead><tr><th>Discipline</th><th>Completed</th><th>Delayed</th><th>Avg Planned</th><th>Avg Actual</th></tr></thead>
+          <tbody id="memoryTableBody"><tr><td colspan="5" class="empty-cell">Loading memory...</td></tr></tbody>
+        </table>
+      </div>
+    </section>
+  </main>
+  <script src="script.js"></script>
+</body>
+</html>

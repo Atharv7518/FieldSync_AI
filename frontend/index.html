@@ -3,346 +3,106 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>FieldSync | Intelligent Progress Tracker</title>
-  
-  <!-- Modern Fonts and Icons -->
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <title>FieldSync | Dashboard</title>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-  
+  <!-- Frappe Gantt Library -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/frappe-gantt/0.6.1/frappe-gantt.min.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/frappe-gantt/0.6.1/frappe-gantt.min.js"></script>
   <link rel="stylesheet" href="style.css" />
+  <script>if (!localStorage.getItem('fieldSyncSession')) window.location.href = 'auth.html';</script>
 </head>
-
 <body>
-  <!-- Top Navigation Bar -->
   <header class="topbar">
-    <div class="brand-container">
-      <div class="logo-icon"><i class="fa-solid fa-layer-group"></i></div>
-      <div class="brand-text">
-        <p class="eyebrow">Oil India Limited</p>
-        <h1>FieldSync</h1>
-        <p class="subtitle">Intelligent Progress Capture & Schedule Linking</p>
+    <div class="brand-group">
+      <div class="brand-container">
+        <div class="logo-icon"><img src="logo.png" alt="FieldSync Logo"></div>
+        <div class="brand-text">
+          <p class="eyebrow"><i class="fa-solid fa-building"></i> Company</p>
+          <h1>FieldSync</h1>
+        </div>
       </div>
+      <nav class="nav-menu">
+        <a href="index.html" class="active">Dashboard</a>
+        <a href="capture.html">Data Capture</a>
+        <a href="events.html">Progress Events</a>
+        <a href="memory.html">Institutional Memory</a>
+        <a href="audit.html">Audit Trail</a>
+      </nav>
     </div>
-
     <div class="api-status">
       <span id="apiDot" class="status-dot"></span>
       <span id="apiStatus">Checking API...</span>
+      <button id="logoutBtn" class="small-button secondary-button" style="margin-left: 16px;">
+        <i class="fa-solid fa-arrow-right-from-bracket"></i> Logout
+      </button>
     </div>
   </header>
 
   <main class="container">
-    <!-- Dashboard Header -->
     <section class="welcome-row">
       <div class="welcome-text">
-        <h2>Project Progress Dashboard</h2>
-        <p>Capture site progress, link it to schedule activities, and review AI suggestions.</p>
+        <h2>Project Overview</h2>
+        <p>Review high-level metrics and approve AI matching suggestions.</p>
       </div>
       <button id="refreshButton" class="secondary-button">
-        <i class="fa-solid fa-rotate-right"></i> Refresh Dashboard
+        <i class="fa-solid fa-rotate-right"></i> Refresh
       </button>
     </section>
 
-    <!-- Top Metrics Grid -->
     <section class="stats-grid">
-      <article class="stat-card blue">
-        <div class="stat-icon"><i class="fa-solid fa-list-check"></i></div>
-        <div class="stat-details">
-          <p>Schedule Activities</p>
-          <strong id="activityCount">0</strong>
-        </div>
-      </article>
-
-      <article class="stat-card green">
-        <div class="stat-icon"><i class="fa-solid fa-circle-check"></i></div>
-        <div class="stat-details">
-          <p>Completed Activities</p>
-          <strong id="completedCount">0</strong>
-        </div>
-      </article>
-
-      <article class="stat-card orange">
-        <div class="stat-icon"><i class="fa-solid fa-satellite-dish"></i></div>
-        <div class="stat-details">
-          <p>Captured Events</p>
-          <strong id="eventCount">0</strong>
-        </div>
-      </article>
-
-      <article class="stat-card yellow">
-        <div class="stat-icon"><i class="fa-solid fa-user-clock"></i></div>
-        <div class="stat-details">
-          <p>Pending Reviews</p>
-          <strong id="pendingCount">0</strong>
-        </div>
-      </article>
-
-      <article class="stat-card red">
-        <div class="stat-icon"><i class="fa-solid fa-triangle-exclamation"></i></div>
-        <div class="stat-details">
-          <p>Delayed Activities</p>
-          <strong id="delayedCount">0</strong>
-        </div>
-      </article>
-
-      <article class="stat-card purple">
-        <div class="stat-icon"><i class="fa-solid fa-link-slash"></i></div>
-        <div class="stat-details">
-          <p>Unmatched Events</p>
-          <strong id="unmatchedCount">0</strong>
-        </div>
-      </article>
+      <article class="stat-card blue"><div class="stat-icon"><i class="fa-solid fa-list-check"></i></div><div class="stat-details"><p>Schedule Activities</p><strong id="activityCount">0</strong></div></article>
+      <article class="stat-card green"><div class="stat-icon"><i class="fa-solid fa-circle-check"></i></div><div class="stat-details"><p>Completed</p><strong id="completedCount">0</strong></div></article>
+      <article class="stat-card orange"><div class="stat-icon"><i class="fa-solid fa-satellite-dish"></i></div><div class="stat-details"><p>Captured Events</p><strong id="eventCount">0</strong></div></article>
+      <article class="stat-card yellow"><div class="stat-icon"><i class="fa-solid fa-user-clock"></i></div><div class="stat-details"><p>Pending Reviews</p><strong id="pendingCount">0</strong></div></article>
+      <article class="stat-card red"><div class="stat-icon"><i class="fa-solid fa-triangle-exclamation"></i></div><div class="stat-details"><p>Delayed</p><strong id="delayedCount">0</strong></div></article>
+      <article class="stat-card purple"><div class="stat-icon"><i class="fa-solid fa-link-slash"></i></div><div class="stat-details"><p>Unmatched Events</p><strong id="unmatchedCount">0</strong></div></article>
     </section>
 
-    <!-- Alert Messages -->
     <div id="messageBox" class="message-box hidden"></div>
 
-    <!-- Action Panels Grid -->
-    <section class="action-grid">
-      <!-- NLP Report Upload -->
-      <article class="panel form-panel">
-        <div class="panel-header">
-          <h3><i class="fa-solid fa-keyboard"></i> Submit Daily Report</h3>
-          <p class="panel-description">Supervisors can write natural-language site updates here.</p>
-        </div>
-        <form id="reportForm">
-          <div class="input-group">
-            <label for="reportText">Site progress update</label>
-            <textarea
-              id="reportText"
-              required
-              minlength="5"
-              placeholder="Example: Daily Progress Report - 15 January 2026. Piping team completed spool erection near Unit 24."
-            ></textarea>
-          </div>
-          
-          <div class="voice-agent-row">
-            <button id="voiceButton" type="button" class="voice-button">
-              <i class="fa-solid fa-microphone"></i> Start Voice Agent
-            </button>
-            <span id="voiceStatus">Speak a site-progress update in English.</span>
-          </div>
-
-          <button type="submit" class="primary-button">
-            <i class="fa-solid fa-cloud-arrow-up"></i> Save Report
-          </button>
-        </form>
-      </article>
-
-      <!-- Schedule Upload -->
-      <article class="panel form-panel">
-        <div class="panel-header">
-          <h3><i class="fa-solid fa-calendar-days"></i> Baseline Schedule</h3>
-          <p class="panel-description">Upload Primavera/MS Project schedule as CSV/Excel.</p>
-        </div>
-        <form id="scheduleUploadForm">
-          <div class="input-group file-group">
-            <label for="scheduleFile">Schedule file (.csv or .xlsx)</label>
-            <input
-              id="scheduleFile"
-              type="file"
-              accept=".csv,.xlsx"
-              required
-              class="file-input"
-            />
-          </div>
-          <button type="submit" class="primary-button outline">
-            <i class="fa-solid fa-file-import"></i> Upload Schedule
-          </button>
-        </form>
-      </article>
-
-      <!-- Discipline Progress Upload -->
-      <article class="panel form-panel">
-        <div class="panel-header">
-          <h3><i class="fa-solid fa-hard-hat"></i> Discipline Sheet</h3>
-          <p class="panel-description">Upload Civil, Piping, or Electrical progress report.</p>
-        </div>
-        <form id="progressSheetForm">
-          <div class="input-group file-group">
-            <label for="progressSheetFile">Progress sheet (.csv or .xlsx)</label>
-            <input
-              id="progressSheetFile"
-              type="file"
-              accept=".csv,.xlsx"
-              required
-              class="file-input"
-            />
-          </div>
-          <button type="submit" class="primary-button outline">
-            <i class="fa-solid fa-file-import"></i> Upload Progress Sheet
-          </button>
-        </form>
-      </article>
-    </section>
-
-    <!-- Planner Review Queue -->
     <section class="panel full-panel review-panel">
       <div class="section-heading">
-        <div class="heading-text">
-          <h3>Planner Review Queue</h3>
-          <p>AI-generated matches waiting for approval or rejection.</p>
-        </div>
+        <div class="heading-text"><h3>Planner Review Queue</h3><p>AI-generated matches waiting for approval.</p></div>
         <span class="badge pending">Needs Attention</span>
       </div>
-      <div id="pendingMatchList" class="match-list">
-        <p class="empty-cell">Loading pending matches...</p>
+      <div id="pendingMatchList" class="match-list"><p class="empty-cell">Loading pending matches...</p></div>
+    </section>
+
+    <!-- Gantt Chart Section -->
+    <section class="panel full-panel" style="margin-top: 24px;">
+      <div class="section-heading">
+        <div class="heading-text">
+          <h3>Project Timeline (Gantt)</h3>
+          <p>Visual schedule tracking driven by AI progress extraction.</p>
+        </div>
+      </div>
+      <div class="gantt-wrapper" style="overflow-x: auto; padding: 20px;">
+        <svg id="gantt"></svg>
       </div>
     </section>
 
-    <!-- Data Tables Grid -->
-    <div class="data-tables-container">
-      
-      <!-- Extracted Events -->
+    <div class="split-tables-grid" style="margin-top: 24px;">
       <section class="panel full-panel">
-        <div class="section-heading">
-          <div class="heading-text">
-            <h3>Extracted Progress Events</h3>
-            <p>Events found from text reports and discipline spreadsheets.</p>
-          </div>
-        </div>
+        <div class="section-heading"><div class="heading-text"><h3>Baseline Schedule</h3></div></div>
         <div class="table-wrapper">
           <table>
-            <thead>
-              <tr>
-                <th>Event ID</th>
-                <th>Reported Activity</th>
-                <th>Discipline</th>
-                <th>Event Type</th>
-                <th>Date</th>
-                <th>Confidence</th>
-                <th>Action</th>
-              </tr>
-            </thead>
-            <tbody id="eventTableBody">
-              <tr>
-                <td colspan="7" class="empty-cell">Loading events...</td>
-              </tr>
-            </tbody>
+            <thead><tr><th>Activity ID</th><th>Activity</th><th>Discipline</th><th>Status</th></tr></thead>
+            <tbody id="activityTableBody"><tr><td colspan="4">Loading...</td></tr></tbody>
           </table>
         </div>
       </section>
-
-      <!-- Baseline Schedule -->
       <section class="panel full-panel">
-        <div class="section-heading">
-          <div class="heading-text">
-            <h3>Baseline Schedule Activities</h3>
-            <p>Planned versus actual execution status.</p>
-          </div>
-        </div>
+        <div class="section-heading"><div class="heading-text"><h3>Discipline Progress</h3></div></div>
         <div class="table-wrapper">
           <table>
-            <thead>
-              <tr>
-                <th>Activity ID</th>
-                <th>Activity</th>
-                <th>Discipline</th>
-                <th>Planned Finish</th>
-                <th>Actual Finish</th>
-                <th>Status</th>
-              </tr>
-            </thead>
-            <tbody id="activityTableBody">
-              <tr>
-                <td colspan="6" class="empty-cell">Loading activities...</td>
-              </tr>
-            </tbody>
+            <thead><tr><th>Discipline</th><th>Total</th><th>Completed</th><th>Delayed</th></tr></thead>
+            <tbody id="disciplineTableBody"><tr><td colspan="4">Loading...</td></tr></tbody>
           </table>
         </div>
       </section>
-
-      <!-- Analytics Section -->
-      <div class="split-tables-grid">
-        <!-- Discipline Analytics -->
-        <section class="panel full-panel">
-          <div class="section-heading">
-            <div class="heading-text">
-              <h3>Progress Analytics</h3>
-              <p>Status summary by discipline.</p>
-            </div>
-          </div>
-          <div class="table-wrapper">
-            <table>
-              <thead>
-                <tr>
-                  <th>Discipline</th>
-                  <th>Total</th>
-                  <th>Completed</th>
-                  <th>In Progress</th>
-                  <th>Delayed</th>
-                </tr>
-              </thead>
-              <tbody id="disciplineTableBody">
-                <tr>
-                  <td colspan="5" class="empty-cell">Loading analytics...</td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
-        </section>
-
-        <!-- Institutional Memory -->
-        <section class="panel full-panel">
-          <div class="section-heading">
-            <div class="heading-text">
-              <h3>Institutional Memory</h3>
-              <p>Historical execution patterns.</p>
-            </div>
-          </div>
-          <div class="table-wrapper">
-            <table>
-              <thead>
-                <tr>
-                  <th>Discipline</th>
-                  <th>Completed</th>
-                  <th>Delayed</th>
-                  <th>Avg Planned</th>
-                  <th>Avg Actual</th>
-                </tr>
-              </thead>
-              <tbody id="memoryTableBody">
-                <tr>
-                  <td colspan="5" class="empty-cell">Loading memory...</td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
-        </section>
-      </div>
-
-      <!-- Audit Trail -->
-      <section class="panel full-panel">
-        <div class="section-heading">
-          <div class="heading-text">
-            <h3>Audit Trail</h3>
-            <p>Traceable history of planner decisions.</p>
-          </div>
-        </div>
-        <div class="table-wrapper">
-          <table>
-            <thead>
-              <tr>
-                <th>Time</th>
-                <th>Entity</th>
-                <th>Action</th>
-                <th>Previous Value</th>
-                <th>New Value</th>
-              </tr>
-            </thead>
-            <tbody id="auditTableBody">
-              <tr>
-                <td colspan="5" class="empty-cell">Loading audit records...</td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-      </section>
-
     </div>
   </main>
-
   <script src="script.js"></script>
 </body>
 </html>

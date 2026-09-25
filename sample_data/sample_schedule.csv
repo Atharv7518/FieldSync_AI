@@ -1,6 +1,36 @@
 activity_code,activity_name,wbs_code,wbs_level,discipline,planned_start,planned_finish
-CIV-001,Excavate foundation for Pump P-01,WBS-CIV-01,L5,Civil,2026-01-05,2026-01-09
-CIV-002,Cast foundation for Pump P-01,WBS-CIV-01,L5,Civil,2026-01-10,2026-01-14
-PIP-102,Erect Line 24-XX,WBS-PIP-01,L5,Piping,2026-01-10,2026-01-15
-PIP-103,Install spool at Unit 24,WBS-PIP-01,L6,Piping,2026-01-16,2026-01-18
-ELE-081,Cable laying for Pump House,WBS-ELE-01,L5,Electrical,2026-01-20,2026-01-25
+CIV-001,Site clearance and grading for Main Plant,WBS-CIV-01,L5,Civil,2026-01-02,2026-01-06
+CIV-002,Excavation for Pump P-01 foundation,WBS-CIV-01,L5,Civil,2026-01-07,2026-01-10
+CIV-003,Formwork and rebar for Pump P-01 foundation,WBS-CIV-01,L6,Civil,2026-01-11,2026-01-14
+CIV-004,Concrete pouring for Pump P-01 foundation,WBS-CIV-01,L6,Civil,2026-01-15,2026-01-16
+CIV-005,Curing and stripping of P-01 foundation,WBS-CIV-01,L6,Civil,2026-01-17,2026-01-22
+CIV-006,Excavation for Compressor C-101 block,WBS-CIV-02,L5,Civil,2026-01-15,2026-01-20
+CIV-007,Backfilling and compaction around C-101,WBS-CIV-02,L5,Civil,2026-01-25,2026-01-28
+MEC-001,Unloading and inspection of Pump P-01,WBS-MEC-01,L5,Mechanical,2026-01-23,2026-01-24
+MEC-002,Erection of Pump P-01 on foundation,WBS-MEC-01,L5,Mechanical,2026-01-25,2026-01-27
+MEC-003,Alignment and grouting of Pump P-01,WBS-MEC-01,L6,Mechanical,2026-01-28,2026-01-30
+MEC-004,Erection of Compressor C-101,WBS-MEC-02,L5,Mechanical,2026-02-05,2026-02-10
+MEC-005,Installation of lube oil skid for C-101,WBS-MEC-02,L6,Mechanical,2026-02-11,2026-02-14
+MEC-006,Erection of Storage Tank T-501,WBS-MEC-03,L5,Mechanical,2026-01-10,2026-01-30
+MEC-007,Hydrotesting of Storage Tank T-501,WBS-MEC-03,L6,Mechanical,2026-02-02,2026-02-05
+PIP-001,Pre-fabrication of cooling water spools,WBS-PIP-01,L5,Piping,2026-01-05,2026-01-20
+PIP-002,Erection of cooling water piping at Unit 24,WBS-PIP-01,L5,Piping,2026-01-22,2026-02-05
+PIP-003,Welding of CW spools at Unit 24,WBS-PIP-01,L6,Piping,2026-01-25,2026-02-08
+PIP-004,NDT and radiography of CW welds,WBS-PIP-01,L6,Piping,2026-02-09,2026-02-12
+PIP-005,Hydrotesting of CW piping circuit,WBS-PIP-01,L6,Piping,2026-02-15,2026-02-16
+PIP-006,Pre-fabrication of lube oil piping,WBS-PIP-02,L5,Piping,2026-02-01,2026-02-10
+PIP-007,Erection of lube oil piping for C-101,WBS-PIP-02,L5,Piping,2026-02-12,2026-02-20
+PIP-008,Flange torqueing for Pump P-01 connections,WBS-PIP-03,L6,Piping,2026-01-31,2026-02-02
+ELE-001,Installation of primary cable trays in Plant A,WBS-ELE-01,L5,Electrical,2026-01-10,2026-01-25
+ELE-002,Laying of HT cables to Main Substation,WBS-ELE-01,L5,Electrical,2026-01-26,2026-02-10
+ELE-003,Glanding and termination of HT cables,WBS-ELE-01,L6,Electrical,2026-02-11,2026-02-18
+ELE-004,Erection of 11kV Switchgear panels,WBS-ELE-02,L5,Electrical,2026-02-01,2026-02-05
+ELE-005,Installation of motor control center (MCC),WBS-ELE-02,L5,Electrical,2026-02-06,2026-02-10
+ELE-006,Local push button station mounting for P-01,WBS-ELE-03,L6,Electrical,2026-02-05,2026-02-06
+ELE-007,Megger testing of P-01 motor cables,WBS-ELE-03,L6,Electrical,2026-02-08,2026-02-09
+INS-001,Installation of main instrument cable trays,WBS-INS-01,L5,Instrumentation,2026-01-15,2026-01-30
+INS-002,Mounting of field junction boxes (JB),WBS-INS-01,L5,Instrumentation,2026-02-01,2026-02-05
+INS-003,Calibration of pressure transmitters,WBS-INS-02,L6,Instrumentation,2026-01-20,2026-01-25
+INS-004,Installation of PT and TT at Pump P-01,WBS-INS-02,L6,Instrumentation,2026-02-05,2026-02-07
+INS-005,Laying of impulse tubing for C-101,WBS-INS-03,L6,Instrumentation,2026-02-15,2026-02-20
+INS-006,Loop checking for Pump P-01 instruments,WBS-INS-02,L6,Instrumentation,2026-02-10,2026-02-12

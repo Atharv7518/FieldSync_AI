@@ -24,12 +24,16 @@ const apiStatus = document.getElementById("apiStatus");
 
 function showMessage(message, type = "success") {
   const icon = type === "success" ? '<i class="fa-solid fa-circle-check"></i>' : '<i class="fa-solid fa-circle-exclamation"></i>';
-  messageBox.innerHTML = `${icon} ${message}`;
-  messageBox.className = `message-box ${type}`;
+  if (messageBox) {
+    messageBox.innerHTML = `${icon} ${message}`;
+    messageBox.className = `message-box ${type}`;
+  }
 }
 
 function hideMessage() {
-  messageBox.className = "message-box hidden";
+  if (messageBox) {
+    messageBox.className = "message-box hidden";
+  }
 }
 
 function setLoadingState(button, isLoading, originalHtml = "") {
@@ -76,6 +80,7 @@ async function apiRequest(endpoint, options = {}) {
 }
 
 async function checkApiHealth() {
+  if (!apiDot || !apiStatus) return;
   try {
     await apiRequest("/health");
     apiDot.className = "status-dot online";
@@ -202,6 +207,62 @@ function renderAuditLogs(logs) {
   `).join("");
 }
 
+function renderGanttChart(activities) {
+  const ganttContainer = document.getElementById("gantt");
+  // If the container doesn't exist (e.g., we aren't on the dashboard page) or no data, stop.
+  if (!ganttContainer || !activities.length) return;
+
+  // Transform our backend activities into Frappe Gantt task format
+  const tasks = activities.map(act => {
+    let progressPercent = 0;
+    if (act.status === 'completed') progressPercent = 100;
+    else if (act.status === 'in_progress') progressPercent = 50;
+
+    // Use actual dates if available, fallback to planned dates
+    const startDate = act.actual_start || act.planned_start || new Date().toISOString().split('T')[0];
+    const endDate = act.actual_finish || act.planned_finish || new Date().toISOString().split('T')[0];
+
+    return {
+      id: act.activity_code,
+      name: act.activity_name,
+      start: startDate,
+      end: endDate,
+      progress: progressPercent,
+      dependencies: '' // You can add activity dependencies here later if you build that feature
+    };
+  });
+
+  // Sort chronologically
+  tasks.sort((a, b) => new Date(a.start) - new Date(b.start));
+
+  // Clear previous chart
+  ganttContainer.innerHTML = '';
+
+  // Initialize Frappe Gantt
+  new Gantt("#gantt", tasks, {
+    header_height: 50,
+    column_width: 30,
+    step: 24,
+    view_modes: ['Quarter Day', 'Half Day', 'Day', 'Week', 'Month'],
+    bar_height: 25,
+    bar_corner_radius: 6,
+    arrow_curve: 5,
+    padding: 18,
+    view_mode: 'Week', // Default view (can be changed to Day or Month)
+    date_format: 'YYYY-MM-DD',
+    custom_popup_html: function(task) {
+      return `
+        <div class="gantt-popup" style="padding: 12px; min-width: 200px;">
+          <div class="title" style="margin-bottom: 8px; padding-bottom: 4px;">${task.id}</div>
+          <div class="subtitle" style="font-size: 13px; margin-bottom: 6px;">${task.name}</div>
+          <div style="font-size: 12px; color: #a1a1aa;">Progress: <strong style="color: #5ca64a;">${task.progress}%</strong></div>
+          <div style="font-size: 12px; color: #a1a1aa;">End: ${task.end}</div>
+        </div>
+      `;
+    }
+  });
+}
+
 // --- Core Logic ---
 
 async function loadDashboard() {
@@ -216,19 +277,26 @@ async function loadDashboard() {
     ]);
 
     const summary = analytics.project_summary;
-    activityCount.textContent = summary.total_schedule_activities;
-    completedCount.textContent = summary.completed_activities;
-    eventCount.textContent = summary.total_progress_events;
-    pendingCount.textContent = summary.pending_planner_reviews;
-    delayedCount.textContent = summary.delayed_activities;
-    unmatchedCount.textContent = summary.unmatched_progress_events;
+    
+    // Only update these if we are on the main dashboard page
+    if (activityCount) {
+      activityCount.textContent = summary.total_schedule_activities;
+      completedCount.textContent = summary.completed_activities;
+      eventCount.textContent = summary.total_progress_events;
+      pendingCount.textContent = summary.pending_planner_reviews;
+      delayedCount.textContent = summary.delayed_activities;
+      unmatchedCount.textContent = summary.unmatched_progress_events;
+    }
 
-    renderActivities(activities);
-    renderEvents(events);
-    renderPendingMatches(pendingMatches);
-    renderDisciplineSummary(analytics.discipline_summary);
-    renderInstitutionalMemory(institutionalMemory);
-    renderAuditLogs(auditLogs);
+    // Only render tables if they exist on the current HTML page
+    if (activityTableBody) renderActivities(activities);
+    if (eventTableBody) renderEvents(events);
+    if (pendingMatchList) renderPendingMatches(pendingMatches);
+    if (disciplineTableBody) renderDisciplineSummary(analytics.discipline_summary);
+    if (memoryTableBody) renderInstitutionalMemory(institutionalMemory);
+    if (auditTableBody) renderAuditLogs(auditLogs);
+    renderGanttChart(activities);
+    
   } catch (error) {
     showMessage(`Dashboard error: ${error.message}`, "error");
   }
@@ -258,108 +326,122 @@ async function reviewMatch(matchId, decision) {
   }
 }
 
-// --- Event Listeners ---
+// --- Event Listeners (Safely Wrapped for Multi-Page) ---
 
-document.getElementById("reportForm").addEventListener("submit", async (event) => {
-  event.preventDefault();
-  const reportText = document.getElementById("reportText").value.trim();
-  const submitBtn = event.target.querySelector('button[type="submit"]');
-  const originalHtml = submitBtn.innerHTML;
-  
-  setLoadingState(submitBtn, true);
-  
-  try {
-    const report = await apiRequest("/api/reports", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ source_type: "text", raw_content: reportText }),
-    });
+const reportForm = document.getElementById("reportForm");
+if (reportForm) {
+  reportForm.addEventListener("submit", async (event) => {
+    event.preventDefault();
+    const reportText = document.getElementById("reportText").value.trim();
+    const submitBtn = event.target.querySelector('button[type="submit"]');
+    const originalHtml = submitBtn.innerHTML;
     
-    document.getElementById("reportText").value = "";
+    setLoadingState(submitBtn, true);
     
     try {
-      const extraction = await apiRequest(`/api/reports/${report.id}/extract`, { method: "POST" });
-      showMessage(`Report saved and ${extraction.extracted_count} progress events extracted.`, "success");
-    } catch (extractionError) {
-      showMessage(`Report saved, but no events were extracted: ${extractionError.message}`, "warning");
+      const report = await apiRequest("/api/reports", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ source_type: "text", raw_content: reportText }),
+      });
+      
+      document.getElementById("reportText").value = "";
+      
+      try {
+        const extraction = await apiRequest(`/api/reports/${report.id}/extract`, { method: "POST" });
+        showMessage(`Report saved and ${extraction.extracted_count} progress events extracted.`, "success");
+      } catch (extractionError) {
+        showMessage(`Report saved, but no events were extracted: ${extractionError.message}`, "warning");
+      }
+      await loadDashboard();
+    } catch (error) {
+      showMessage(`Could not save report: ${error.message}`, "error");
+    } finally {
+      setLoadingState(submitBtn, false, originalHtml);
     }
+  });
+}
+
+const scheduleUploadForm = document.getElementById("scheduleUploadForm");
+if (scheduleUploadForm) {
+  scheduleUploadForm.addEventListener("submit", async (event) => {
+    event.preventDefault();
+    const fileInput = document.getElementById("scheduleFile");
+    const file = fileInput.files[0];
+    if (!file) {
+      showMessage("Please select a schedule file.", "error");
+      return;
+    }
+
+    const submitBtn = event.target.querySelector('button[type="submit"]');
+    const originalHtml = submitBtn.innerHTML;
+    setLoadingState(submitBtn, true);
+
+    const formData = new FormData();
+    formData.append("file", file);
+
+    try {
+      const result = await apiRequest("/api/activities/upload", { method: "POST", body: formData });
+      fileInput.value = "";
+      showMessage(`${result.imported_count} schedule activities imported.`, "success");
+      await loadDashboard();
+    } catch (error) {
+      showMessage(`Schedule upload failed: ${error.message}`, "error");
+    } finally {
+      setLoadingState(submitBtn, false, originalHtml);
+    }
+  });
+}
+
+const progressSheetForm = document.getElementById("progressSheetForm");
+if (progressSheetForm) {
+  progressSheetForm.addEventListener("submit", async (event) => {
+    event.preventDefault();
+    const fileInput = document.getElementById("progressSheetFile");
+    const file = fileInput.files[0];
+    if (!file) {
+      showMessage("Please select a progress sheet.", "error");
+      return;
+    }
+
+    const submitBtn = event.target.querySelector('button[type="submit"]');
+    const originalHtml = submitBtn.innerHTML;
+    setLoadingState(submitBtn, true);
+
+    const formData = new FormData();
+    formData.append("file", file);
+
+    try {
+      const result = await apiRequest("/api/reports/upload-sheet", { method: "POST", body: formData });
+      fileInput.value = "";
+      showMessage(`${result.events_created} progress events created.`, "success");
+      await loadDashboard();
+    } catch (error) {
+      showMessage(`Progress-sheet upload failed: ${error.message}`, "error");
+    } finally {
+      setLoadingState(submitBtn, false, originalHtml);
+    }
+  });
+}
+
+const refreshButton = document.getElementById("refreshButton");
+if (refreshButton) {
+  refreshButton.addEventListener("click", async (e) => {
+    hideMessage();
+    const originalHtml = e.target.innerHTML;
+    e.target.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Refreshing...';
+    await checkApiHealth();
     await loadDashboard();
-  } catch (error) {
-    showMessage(`Could not save report: ${error.message}`, "error");
-  } finally {
-    setLoadingState(submitBtn, false, originalHtml);
-  }
-});
-
-document.getElementById("scheduleUploadForm").addEventListener("submit", async (event) => {
-  event.preventDefault();
-  const fileInput = document.getElementById("scheduleFile");
-  const file = fileInput.files[0];
-  if (!file) {
-    showMessage("Please select a schedule file.", "error");
-    return;
-  }
-
-  const submitBtn = event.target.querySelector('button[type="submit"]');
-  const originalHtml = submitBtn.innerHTML;
-  setLoadingState(submitBtn, true);
-
-  const formData = new FormData();
-  formData.append("file", file);
-
-  try {
-    const result = await apiRequest("/api/activities/upload", { method: "POST", body: formData });
-    fileInput.value = "";
-    showMessage(`${result.imported_count} schedule activities imported.`, "success");
-    await loadDashboard();
-  } catch (error) {
-    showMessage(`Schedule upload failed: ${error.message}`, "error");
-  } finally {
-    setLoadingState(submitBtn, false, originalHtml);
-  }
-});
-
-document.getElementById("progressSheetForm").addEventListener("submit", async (event) => {
-  event.preventDefault();
-  const fileInput = document.getElementById("progressSheetFile");
-  const file = fileInput.files[0];
-  if (!file) {
-    showMessage("Please select a progress sheet.", "error");
-    return;
-  }
-
-  const submitBtn = event.target.querySelector('button[type="submit"]');
-  const originalHtml = submitBtn.innerHTML;
-  setLoadingState(submitBtn, true);
-
-  const formData = new FormData();
-  formData.append("file", file);
-
-  try {
-    const result = await apiRequest("/api/reports/upload-sheet", { method: "POST", body: formData });
-    fileInput.value = "";
-    showMessage(`${result.events_created} progress events created.`, "success");
-    await loadDashboard();
-  } catch (error) {
-    showMessage(`Progress-sheet upload failed: ${error.message}`, "error");
-  } finally {
-    setLoadingState(submitBtn, false, originalHtml);
-  }
-});
-
-document.getElementById("refreshButton").addEventListener("click", async (e) => {
-  hideMessage();
-  const originalHtml = e.target.innerHTML;
-  e.target.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Refreshing...';
-  await checkApiHealth();
-  await loadDashboard();
-  e.target.innerHTML = originalHtml;
-});
+    e.target.innerHTML = originalHtml;
+  });
+}
 
 // --- Voice Agent ---
 
 function setupVoiceTimeAgent() {
   const voiceButton = document.getElementById("voiceButton");
+  if (!voiceButton) return; // Exit if button isn't on current page
+
   const voiceStatus = document.getElementById("voiceStatus");
   const reportText = document.getElementById("reportText");
 
@@ -406,10 +488,31 @@ function setupVoiceTimeAgent() {
   };
 }
 
+// --- Initialization & Session ---
+
 async function initializeApplication() {
   setupVoiceTimeAgent();
   await checkApiHealth();
   await loadDashboard();
+}
+
+const sessionData = JSON.parse(localStorage.getItem('fieldSyncSession'));
+
+if (sessionData) {
+  // Personalize the dashboard based on the login
+  const eyebrow = document.querySelector('.eyebrow');
+  if (eyebrow) {
+    // Show the actual company code they used to log in
+    eyebrow.innerHTML = `<i class="fa-solid fa-building"></i> ${sessionData.company}`;
+  }
+}
+
+const logoutBtn = document.getElementById('logoutBtn');
+if (logoutBtn) {
+  logoutBtn.addEventListener('click', () => {
+    localStorage.removeItem('fieldSyncSession');
+    window.location.href = 'auth.html';
+  });
 }
 
 initializeApplication();
