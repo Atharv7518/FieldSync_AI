@@ -188,7 +188,7 @@ tbody tr:hover { background-color: rgba(255, 255, 255, 0.03); }
 }
 
 /* ==========================================================================
-   Frappe Gantt Dark Theme Overrides (High Contrast Fix)
+   Frappe Gantt Dark Theme Overrides
    ========================================================================== */
 .gantt .grid-background { fill: var(--page-bg) !important; }
 .gantt .grid-header { fill: var(--brand-navy) !important; }
@@ -196,7 +196,7 @@ tbody tr:hover { background-color: rgba(255, 255, 255, 0.03); }
 .gantt .grid-row:nth-child(even) { fill: var(--page-bg) !important; }
 .gantt .tick line { stroke: var(--border) !important; }
 
-/* 1. Fix Header Dates Text (January, 09, 16, etc.) */
+/* 1. Header Dates Text */
 .gantt .upper-text, 
 .gantt .lower-text { 
   fill: #ffffff !important; 
@@ -205,19 +205,27 @@ tbody tr:hover { background-color: rgba(255, 255, 255, 0.03); }
   font-weight: 500 !important;
 }
 
-/* 2. Fix Activity Text Inside & Outside the Bars */
+/* 2. High-Visibility Activity Text */
 .gantt .bar-label,
 .gantt .bar-label.big { 
   fill: #ffffff !important; 
-  font-weight: 600 !important; 
+  font-weight: 700 !important; /* Made text bolder */
   font-size: 13px !important; 
+  /* This shadow ensures text is readable over BOTH the bright bar and dark background */
+  text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.9), 0 0 5px rgba(0, 0, 0, 0.5) !important;
 }
 
-/* 3. Bar Colors */
-.gantt .bar-progress { fill: var(--brand-green) !important; }
-.gantt .bar { fill: var(--brand-teal) !important; stroke: var(--card-bg) !important; stroke-width: 2 !important; }
+/* 3. Modern Progress Track Bars */
+.gantt .bar { 
+  fill: #1a2a3f !important; /* Dark empty track */
+  stroke: var(--brand-teal) !important; /* Teal outline */
+  stroke-width: 1.5 !important; 
+}
+.gantt .bar-progress { 
+  fill: var(--brand-teal) !important; /* Bright teal filling up the track */
+}
 
-/* 4. Fix Hover Popup */
+/* 4. Hover Popup */
 .gantt-popup {
   background: var(--brand-navy) !important;
   border: 1px solid var(--border) !important;
