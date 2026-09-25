@@ -188,52 +188,63 @@ tbody tr:hover { background-color: rgba(255, 255, 255, 0.03); }
 }
 
 /* ==========================================================================
-   Frappe Gantt Dark Theme Overrides
+   Frappe Gantt Light Theme (High Contrast & Clear Visibility)
    ========================================================================== */
-.gantt .grid-background { fill: var(--page-bg) !important; }
-.gantt .grid-header { fill: var(--brand-navy) !important; }
-.gantt .grid-row { fill: var(--card-bg) !important; }
-.gantt .grid-row:nth-child(even) { fill: var(--page-bg) !important; }
-.gantt .tick line { stroke: var(--border) !important; }
+/* Give the chart container a white background so it doesn't clash with the dark panel */
+.gantt-wrapper { 
+  background-color: #ffffff !important; 
+  border-radius: var(--radius-md);
+}
 
-/* 1. Header Dates Text */
+/* Light Theme Grid */
+.gantt .grid-background { fill: #ffffff !important; }
+.gantt .grid-header { fill: #f8fafc !important; } /* Very light gray header */
+.gantt .grid-row { fill: #ffffff !important; }
+.gantt .grid-row:nth-child(even) { fill: #f1f5f9 !important; } /* Alternating light row */
+.gantt .tick line { stroke: #e2e8f0 !important; } /* Soft gray grid lines */
+
+/* 1. Header Dates Text (Dark Slate for clarity) */
 .gantt .upper-text, 
 .gantt .lower-text { 
-  fill: #ffffff !important; 
+  fill: #334155 !important; 
   font-family: 'Inter', sans-serif !important; 
   font-size: 13px !important;
-  font-weight: 500 !important;
+  font-weight: 600 !important;
 }
 
 /* 2. High-Visibility Activity Text */
 .gantt .bar-label,
 .gantt .bar-label.big { 
-  fill: #ffffff !important; 
-  font-weight: 700 !important; /* Made text bolder */
+  fill: #0f172a !important; /* Almost black for maximum readability */
+  font-weight: 700 !important; 
   font-size: 13px !important; 
-  /* This shadow ensures text is readable over BOTH the bright bar and dark background */
-  text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.9), 0 0 5px rgba(0, 0, 0, 0.5) !important;
+  /* Solid white glow so the text is legible whether it overlaps a bar or the grid */
+  text-shadow: 2px 2px 4px #ffffff, -2px -2px 4px #ffffff, 2px -2px 4px #ffffff, -2px 2px 4px #ffffff !important;
 }
 
 /* 3. Modern Progress Track Bars */
 .gantt .bar { 
-  fill: #1a2a3f !important; /* Dark empty track */
-  stroke: var(--brand-teal) !important; /* Teal outline */
+  fill: #e2e8f0 !important; /* Empty track is light gray */
+  stroke: var(--brand-teal) !important; /* Deep Teal outline */
   stroke-width: 1.5 !important; 
 }
 .gantt .bar-progress { 
-  fill: var(--brand-teal) !important; /* Bright teal filling up the track */
+  fill: var(--brand-teal) !important; /* Fills up with bright solid Teal */
 }
 
-/* 4. Hover Popup */
+/* 4. Hover Popup (Light Mode) */
 .gantt-popup {
-  background: var(--brand-navy) !important;
-  border: 1px solid var(--border) !important;
-  color: white !important;
+  background: #ffffff !important;
+  border: 1px solid #cbd5e1 !important;
+  color: #334155 !important;
   border-radius: var(--radius-md) !important;
-  box-shadow: var(--shadow-md) !important;
+  box-shadow: 0 10px 25px rgba(0,0,0,0.15) !important;
   font-family: 'Inter', sans-serif !important;
 }
-.gantt-popup .title { border-bottom: 1px solid var(--brand-teal) !important; color: var(--brand-teal) !important; font-weight: bold; }
-.gantt-popup .subtitle { color: var(--text-main) !important; }
+.gantt-popup .title { 
+  border-bottom: 1px solid #e2e8f0 !important; 
+  color: var(--brand-navy) !important; 
+  font-weight: 800 !important; 
+}
+.gantt-popup .subtitle { color: #475569 !important; font-weight: 600 !important; }
 .gantt-popup .pointer { display: none; }
