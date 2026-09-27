@@ -118,98 +118,22 @@ function renderActivities(activities) {
 }
 
 function renderEvents(events, pendingMatches = []) {
-  try {
-    // 1. Safety check
-    if (!events || !Array.isArray(events)) {
-      if (unmatchedEventTableBody) unmatchedEventTableBody.innerHTML = `<tr><td colspan="7" class="empty-cell">No events found in database.</td></tr>`;
-      if (matchedEventTableBody) matchedEventTableBody.innerHTML = `<tr><td colspan="6" class="empty-cell">No events found in database.</td></tr>`;
-      return;
-    }
+  if (!events || !Array.isArray(events)) return;
 
-    // Extract the IDs of events that are currently sitting in the Planner Review Queue
-    const pendingEventIds = pendingMatches.map(match => match.progress_event_id);
+  const pendingEventIds = pendingMatches.map(match => match.progress_event_id);
 
-    // 2. Sorting Logic: Move BOTH Approved and Rejected to the Processed list
-    const unmatchedEvents = events.filter(event => 
-      !event.is_matched && 
-      !event.match_id && 
-      // Ensure we don't catch construction status like "completed" by mistake
-      event.status !== 'approved' && 
-      event.status !== 'rejected' &&
-      event.review_status !== 'approved' && 
-      event.review_status !== 'rejected' &&
-      event.processing_status !== 'approved' &&
-      event.processing_status !== 'rejected' &&
-      !pendingEventIds.includes(event.id) // Hides it if it is pending review!
-    );
-    
-    const matchedEvents = events.filter(event => 
-      event.is_matched || 
-      event.match_id || 
-      event.status === 'approved' || 
-      event.status === 'rejected' ||
-      event.review_status === 'approved' || 
-      event.review_status === 'rejected' ||
-      event.processing_status === 'approved' ||
-      event.processing_status === 'rejected'
-    );
+  // We won't filter anything right now. We will show ALL events in the top table.
+  const unmatchedEvents = events.filter(event => !pendingEventIds.includes(event.id));
 
-    // 3. Update Badges
-    if (typeof unmatchedBadge !== 'undefined' && unmatchedBadge) unmatchedBadge.textContent = `${unmatchedEvents.length} Pending`;
-    if (typeof matchedBadge !== 'undefined' && matchedBadge) matchedBadge.textContent = `${matchedEvents.length} Processed`;
-
-    // 4. Render Unmatched (Same as before)
-    if (typeof unmatchedEventTableBody !== 'undefined' && unmatchedEventTableBody) {
-      if (unmatchedEvents.length === 0) {
-        unmatchedEventTableBody.innerHTML = `<tr><td colspan="7" class="empty-cell" style="color: var(--success);"><i class="fa-solid fa-check-double"></i> All events have been processed!</td></tr>`;
-      } else {
-        unmatchedEventTableBody.innerHTML = unmatchedEvents.map((event) => `
-          <tr>
-            <td>${event.id || "-"}</td>
-            <td>${event.reported_description || "-"}</td>
-            <td>${event.discipline || "-"}</td>
-            <td><span class="badge" style="background:rgba(255,255,255,0.05); color:var(--text-muted);">${event.event_type || "Update"}</span></td>
-            <td>${event.event_date ? String(event.event_date).split('T')[0] : "-"}</td>
-            <td><strong style="color: var(--brand-teal);">${Number(event.extraction_confidence || 85).toFixed(0)}%</strong></td>
-            <td>
-              <button class="small-button primary-button outline" style="margin-top:0;" onclick="suggestMatch(${event.id})">
-                Match
-              </button>
-            </td>
-          </tr>
-        `).join("");
-      }
-    }
-
-    // 5. Render Matched (NOW DYNAMICALLY SHOWS APPROVED OR REJECTED)
-    if (typeof matchedEventTableBody !== 'undefined' && matchedEventTableBody) {
-      if (matchedEvents.length === 0) {
-        matchedEventTableBody.innerHTML = `<tr><td colspan="6" class="empty-cell">No events have been processed yet.</td></tr>`;
-      } else {
-        matchedEventTableBody.innerHTML = matchedEvents.map((event) => {
-          
-          // Check if the event was flagged as rejected in any of the possible backend columns
-          const isRejected = event.status === 'rejected' || event.review_status === 'rejected' || event.processing_status === 'rejected';
-          
-          // Set the visual text and CSS class (using your delayed class for red/warning color)
-          const badgeText = isRejected ? 'Rejected' : 'Approved';
-          const badgeClass = isRejected ? 'delayed' : 'completed'; 
-
-          return `
-          <tr>
-            <td>${event.id || "-"}</td>
-            <td>${event.reported_description || "-"}</td>
-            <td>${event.discipline || "-"}</td>
-            <td><span class="badge" style="background:rgba(255,255,255,0.05); color:var(--text-muted);">${event.event_type || "Update"}</span></td>
-            <td>${event.event_date ? String(event.event_date).split('T')[0] : "-"}</td>
-            <td><span class="status-badge ${badgeClass}">${badgeText}</span></td>
-          </tr>
-        `}).join("");
-      }
-    }
-  } catch (error) {
-    console.error("The renderEvents function crashed!", error);
-    if (unmatchedEventTableBody) unmatchedEventTableBody.innerHTML = `<tr><td colspan="7" class="empty-cell" style="color: red;">Error loading events. Check console.</td></tr>`;
+  // Render raw data to the screen so we can see exactly what the backend is sending
+  if (unmatchedEventTableBody) {
+    unmatchedEventTableBody.innerHTML = unmatchedEvents.map((event) => `
+      <tr>
+        <td colspan="7" style="text-align: left; font-family: monospace; font-size: 12px; white-space: normal; word-break: break-all; color: var(--text-color);">
+          <strong>Event ID ${event.id}:</strong> ${JSON.stringify(event)}
+        </td>
+      </tr>
+    `).join("");
   }
 }
 
