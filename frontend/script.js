@@ -9,7 +9,10 @@ const delayedCount = document.getElementById("delayedCount");
 const unmatchedCount = document.getElementById("unmatchedCount");
 
 const activityTableBody = document.getElementById("activityTableBody");
-const eventTableBody = document.getElementById("eventTableBody");
+const unmatchedEventTableBody = document.getElementById("unmatchedEventTableBody");
+const matchedEventTableBody = document.getElementById("matchedEventTableBody");
+const unmatchedBadge = document.getElementById("unmatchedBadge");
+const matchedBadge = document.getElementById("matchedBadge");
 const pendingMatchList = document.getElementById("pendingMatchList");
 
 const disciplineTableBody = document.getElementById("disciplineTableBody");
@@ -111,25 +114,55 @@ function renderActivities(activities) {
 }
 
 function renderEvents(events) {
-  if (!events.length) {
-    eventTableBody.innerHTML = `<tr><td colspan="7" class="empty-cell"><i class="fa-solid fa-folder-open"></i> No progress events found.</td></tr>`;
-    return;
+  // Separate events based on whether they have already been matched/approved
+  // (Assuming your backend returns a status or is_matched flag. Adjust the condition if needed.)
+  const unmatchedEvents = events.filter(event => event.status !== 'matched' && event.status !== 'approved');
+  const matchedEvents = events.filter(event => event.status === 'matched' || event.status === 'approved');
+
+  // Update Badges
+  if (unmatchedBadge) unmatchedBadge.textContent = `${unmatchedEvents.length} Pending`;
+  if (matchedBadge) matchedBadge.textContent = `${matchedEvents.length} Processed`;
+
+  // Render Unmatched Events
+  if (unmatchedEventTableBody) {
+    if (!unmatchedEvents.length) {
+      unmatchedEventTableBody.innerHTML = `<tr><td colspan="7" class="empty-cell"><i class="fa-solid fa-check-double"></i> All events have been matched.</td></tr>`;
+    } else {
+      unmatchedEventTableBody.innerHTML = unmatchedEvents.map((event) => `
+        <tr>
+          <td>${event.id}</td>
+          <td>${event.reported_description}</td>
+          <td>${event.discipline || "-"}</td>
+          <td><span class="badge" style="background:rgba(255,255,255,0.05); color:var(--text-muted);">${event.event_type || "-"}</span></td>
+          <td>${formatDate(event.event_date)}</td>
+          <td><strong>${Number(event.extraction_confidence || 0).toFixed(0)}%</strong></td>
+          <td>
+            <button class="small-button primary-button outline" style="margin-top:0;" onclick="suggestMatch(${event.id})">
+              <i class="fa-solid fa-wand-magic-sparkles"></i> Match
+            </button>
+          </td>
+        </tr>
+      `).join("");
+    }
   }
-  eventTableBody.innerHTML = events.map((event) => `
-    <tr>
-      <td>${event.id}</td>
-      <td>${event.reported_description}</td>
-      <td>${event.discipline || "-"}</td>
-      <td><span class="badge" style="background:#f1f5f9; color:#475569;">${event.event_type || "-"}</span></td>
-      <td>${formatDate(event.event_date)}</td>
-      <td><strong>${Number(event.extraction_confidence || 0).toFixed(0)}%</strong></td>
-      <td>
-        <button class="small-button primary-button outline" style="margin-top:0;" onclick="suggestMatch(${event.id})">
-          <i class="fa-solid fa-wand-magic-sparkles"></i> Match
-        </button>
-      </td>
-    </tr>
-  `).join("");
+
+  // Render Matched Events
+  if (matchedEventTableBody) {
+    if (!matchedEvents.length) {
+      matchedEventTableBody.innerHTML = `<tr><td colspan="6" class="empty-cell">No processed events yet.</td></tr>`;
+    } else {
+      matchedEventTableBody.innerHTML = matchedEvents.map((event) => `
+        <tr>
+          <td>${event.id}</td>
+          <td>${event.reported_description}</td>
+          <td>${event.discipline || "-"}</td>
+          <td><span class="badge" style="background:rgba(255,255,255,0.05); color:var(--text-muted);">${event.event_type || "-"}</span></td>
+          <td>${formatDate(event.event_date)}</td>
+          <td><span class="status-badge completed">Linked</span></td>
+        </tr>
+      `).join("");
+    }
+  }
 }
 
 function renderPendingMatches(matches) {
@@ -274,6 +307,7 @@ async function loadDashboard() {
       apiRequest("/api/analytics/summary"),
       apiRequest("/api/insights/institutional-memory"),
       apiRequest("/api/audit-logs"),
+      
     ]);
 
     const summary = analytics.project_summary;
@@ -291,6 +325,7 @@ async function loadDashboard() {
     // Only render tables if they exist on the current HTML page
     if (activityTableBody) renderActivities(activities);
     if (eventTableBody) renderEvents(events);
+    if (unmatchedEventTableBody || matchedEventTableBody) renderEvents(events);
     if (pendingMatchList) renderPendingMatches(pendingMatches);
     if (disciplineTableBody) renderDisciplineSummary(analytics.discipline_summary);
     if (memoryTableBody) renderInstitutionalMemory(institutionalMemory);

@@ -24,17 +24,69 @@
   </header>
 
   <main class="container">
-    <div class="welcome-row"><h2>Extracted Progress Events</h2></div>
+    <div class="welcome-row">
+      <div class="welcome-text">
+        <h2>Progress Events</h2>
+        <p>Raw NLP extractions sorted by matching status.</p>
+      </div>
+    </div>
+    
     <div id="messageBox" class="message-box hidden"></div>
-    <section class="panel full-panel">
+
+    <!-- Unmatched Events Panel -->
+    <section class="panel full-panel" style="margin-bottom: 24px;">
+      <div class="section-heading">
+        <div class="heading-text">
+          <h3><i class="fa-solid fa-link-slash"></i> Unmatched Events</h3>
+          <p>Raw extracted events waiting for AI matching.</p>
+        </div>
+        <span class="badge pending" id="unmatchedBadge">0</span>
+      </div>
       <div class="table-wrapper">
         <table>
-          <thead><tr><th>Event ID</th><th>Reported Activity</th><th>Discipline</th><th>Type</th><th>Date</th><th>Confidence</th><th>Action</th></tr></thead>
-          <tbody id="eventTableBody"><tr><td colspan="7" class="empty-cell">Loading events...</td></tr></tbody>
+          <thead>
+            <tr>
+              <th>Event ID</th>
+              <th>Reported Activity</th>
+              <th>Discipline</th>
+              <th>Type</th>
+              <th>Date</th>
+              <th>Confidence</th>
+              <th>Action</th>
+            </tr>
+          </thead>
+          <tbody id="unmatchedEventTableBody">
+            <tr><td colspan="7" class="empty-cell">Loading events...</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- Matched / Processed Events Panel -->
+    <section class="panel full-panel">
+      <div class="section-heading">
+        <div class="heading-text">
+          <h3><i class="fa-solid fa-link"></i> Processed Events</h3>
+          <p>Events that have been successfully linked to the baseline schedule.</p>
+        </div>
+        <span class="badge" id="matchedBadge" style="background: var(--success-bg); color: var(--success);">0</span>
+      </div>
+      <div class="table-wrapper">
+        <table>
+          <thead>
+            <tr>
+              <th>Event ID</th>
+              <th>Reported Activity</th>
+              <th>Discipline</th>
+              <th>Type</th>
+              <th>Date</th>
+              <th>Status</th>
+            </tr>
+          </thead>
+          <tbody id="matchedEventTableBody">
+            <tr><td colspan="6" class="empty-cell">Loading events...</td></tr>
+          </tbody>
         </table>
       </div>
     </section>
   </main>
-  <script src="script.js"></script>
-</body>
-</html>
