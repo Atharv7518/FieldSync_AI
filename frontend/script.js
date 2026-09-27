@@ -329,34 +329,44 @@ async function loadDashboard() {
       apiRequest("/api/analytics/summary"),
       apiRequest("/api/insights/institutional-memory"),
       apiRequest("/api/audit-logs"),
-      
     ]);
 
-    const summary = analytics.project_summary;
+    // PROTECTED: Check if analytics and project_summary actually exist before assigning
+    const summary = analytics ? analytics.project_summary : null;
     
-    // Only update these if we are on the main dashboard page
-    if (activityCount) {
-      activityCount.textContent = summary.total_schedule_activities;
-      completedCount.textContent = summary.completed_activities;
-      eventCount.textContent = summary.total_progress_events;
-      pendingCount.textContent = summary.pending_planner_reviews;
-      delayedCount.textContent = summary.delayed_activities;
-      unmatchedCount.textContent = summary.unmatched_progress_events;
+    // Only update these if we are on the main dashboard page AND summary exists
+    if (document.getElementById("activityCount") && summary) {
+      document.getElementById("activityCount").textContent = summary.total_schedule_activities || 0;
+      document.getElementById("completedCount").textContent = summary.completed_activities || 0;
+      document.getElementById("eventCount").textContent = summary.total_progress_events || 0;
+      document.getElementById("pendingCount").textContent = summary.pending_planner_reviews || 0;
+      document.getElementById("delayedCount").textContent = summary.delayed_activities || 0;
+      document.getElementById("unmatchedCount").textContent = summary.unmatched_progress_events || 0;
     }
 
-    // Only render tables if they exist on the current HTML page
-    if (activityTableBody) renderActivities(activities);
-    if (eventTableBody) renderEvents(events);
-    if (pendingMatchList) renderPendingMatches(pendingMatches);
-    if (disciplineTableBody) renderDisciplineSummary(analytics.discipline_summary);
-    if (memoryTableBody) renderInstitutionalMemory(institutionalMemory);
-    if (auditTableBody) renderAuditLogs(auditLogs);
+    // BULLETPROOF RENDERING: We call this unconditionally. 
+    // The renderEvents function already safely checks if the tables exist inside it.
+    renderEvents(events);
+
+    // Dynamic element checking guarantees it works on every page
+    if (document.getElementById("activityTableBody")) renderActivities(activities);
+    if (document.getElementById("pendingMatchList")) renderPendingMatches(pendingMatches);
+    
+    if (document.getElementById("disciplineTableBody") && analytics && analytics.discipline_summary) {
+      renderDisciplineSummary(analytics.discipline_summary);
+    }
+    
+    if (document.getElementById("memoryTableBody")) renderInstitutionalMemory(institutionalMemory);
+    if (document.getElementById("auditTableBody")) renderAuditLogs(auditLogs);
     
     // Render the Gantt Chart (if the function exists)
     if (typeof renderGanttChart === 'function') renderGanttChart(activities);
     
   } catch (error) {
-    showMessage(`Dashboard error: ${error.message}`, "error");
+    console.error("Dashboard loading error:", error); // This ensures errors actually print to the console!
+    if (typeof showMessage === 'function') {
+      showMessage(`Dashboard error: ${error.message}`, "error");
+    }
   }
 }
 
