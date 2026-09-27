@@ -330,7 +330,7 @@ async function loadDashboard() {
       apiRequest("/api/activities"),
       apiRequest("/api/reports/events/all"),
       apiRequest("/api/matches/pending"),
-      apiRequest("/api/matches").catch(() => []), // NEW: Safely fetches match history
+      apiRequest("/api/events/history").catch(() => []),
       apiRequest("/api/analytics/summary"),
       apiRequest("/api/insights/institutional-memory"),
       apiRequest("/api/audit-logs"),

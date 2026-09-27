@@ -13,6 +13,19 @@ router = APIRouter(
     tags=["AI Schedule Matching"],
 )
 
+@router.get("/history")
+def get_match_history(db: Session = Depends(get_db)):
+    """
+    Fetch all approved and rejected matches to populate the Processed Events table.
+    """
+    history = db.scalars(
+        select(ActivityMatch).where(
+            ActivityMatch.review_status.in_(["approved", "rejected"])
+        )
+    ).all()
+    
+    return history
+
 
 @router.post(
     "/{event_id}/match",
