@@ -21,7 +21,7 @@ const unmatchedBadge = document.getElementById("unmatchedBadge");
 const matchedBadge = document.getElementById("matchedBadge");
 
 // This tricks fetch logic into running on the Events page!   
-const eventTableBody = unmatchedEventTableBody || matchedEventTableBody;
+const eventTableBody = document.getElementById("unmatchedEventTableBody");
 
 const messageBox = document.getElementById("messageBox");
 const apiDot = document.getElementById("apiDot");
@@ -118,72 +118,72 @@ function renderActivities(activities) {
 }
 
 function renderEvents(events) {
-  // 1. Safety check: If the API didn't return a proper list, clear the loading text and stop.
-  if (!events || !Array.isArray(events)) {
-    if (unmatchedEventTableBody) unmatchedEventTableBody.innerHTML = `<tr><td colspan="7" class="empty-cell">No events found.</td></tr>`;
-    if (matchedEventTableBody) matchedEventTableBody.innerHTML = `<tr><td colspan="6" class="empty-cell">No events found.</td></tr>`;
-    return;
-  }
+  try {
+    console.log("Data received from database:", events); // This will print your data in the Console!
 
-  // 2. The Sorting Logic (One Database Table -> Two Frontend Arrays)
-  // We check for common backend flags (is_matched, match_id) to figure out if it was processed.
-  const unmatchedEvents = events.filter(event => 
-    !event.is_matched && 
-    !event.match_id && 
-    event.status !== 'matched' && 
-    event.status !== 'approved'
-  );
-  
-  const matchedEvents = events.filter(event => 
-    event.is_matched || 
-    event.match_id || 
-    event.status === 'matched' || 
-    event.status === 'approved'
-  );
-
-  // 3. Update the Badges
-  if (typeof unmatchedBadge !== 'undefined' && unmatchedBadge) unmatchedBadge.textContent = `${unmatchedEvents.length} Pending`;
-  if (typeof matchedBadge !== 'undefined' && matchedBadge) matchedBadge.textContent = `${matchedEvents.length} Processed`;
-
-  // 4. Render Unmatched Events Panel
-  if (typeof unmatchedEventTableBody !== 'undefined' && unmatchedEventTableBody) {
-    if (unmatchedEvents.length === 0) {
-      unmatchedEventTableBody.innerHTML = `<tr><td colspan="7" class="empty-cell" style="text-align: center; color: var(--success);"><i class="fa-solid fa-check-double"></i> All events have been processed!</td></tr>`;
-    } else {
-      unmatchedEventTableBody.innerHTML = unmatchedEvents.map((event) => `
-        <tr>
-          <td>${event.id}</td>
-          <td>${event.reported_description}</td>
-          <td>${event.discipline || "-"}</td>
-          <td><span class="badge" style="background:rgba(255,255,255,0.05); color:var(--text-muted);">${event.event_type || "Update"}</span></td>
-          <td>${event.event_date ? event.event_date.split('T')[0] : "-"}</td>
-          <td><strong style="color: var(--brand-teal);">${Number(event.extraction_confidence || 85).toFixed(0)}%</strong></td>
-          <td>
-            <button class="small-button primary-button outline" style="margin-top:0;" onclick="suggestMatch(${event.id})">
-              <i class="fa-solid fa-wand-magic-sparkles"></i> Match
-            </button>
-          </td>
-        </tr>
-      `).join("");
+    // 1. Safety check
+    if (!events || !Array.isArray(events)) {
+      if (unmatchedEventTableBody) unmatchedEventTableBody.innerHTML = `<tr><td colspan="7" class="empty-cell">No events found in database.</td></tr>`;
+      if (matchedEventTableBody) matchedEventTableBody.innerHTML = `<tr><td colspan="6" class="empty-cell">No events found in database.</td></tr>`;
+      return;
     }
-  }
 
-  // 5. Render Processed Events Panel
-  if (typeof matchedEventTableBody !== 'undefined' && matchedEventTableBody) {
-    if (matchedEvents.length === 0) {
-      matchedEventTableBody.innerHTML = `<tr><td colspan="6" class="empty-cell" style="text-align: center;">No events have been processed yet.</td></tr>`;
-    } else {
-      matchedEventTableBody.innerHTML = matchedEvents.map((event) => `
-        <tr>
-          <td>${event.id}</td>
-          <td>${event.reported_description}</td>
-          <td>${event.discipline || "-"}</td>
-          <td><span class="badge" style="background:rgba(255,255,255,0.05); color:var(--text-muted);">${event.event_type || "Update"}</span></td>
-          <td>${event.event_date ? event.event_date.split('T')[0] : "-"}</td>
-          <td><span class="status-badge completed">Linked</span></td>
-        </tr>
-      `).join("");
+    // 2. Sorting Logic
+    const unmatchedEvents = events.filter(event => 
+      !event.is_matched && !event.match_id && event.status !== 'matched' && event.status !== 'approved'
+    );
+    
+    const matchedEvents = events.filter(event => 
+      event.is_matched || event.match_id || event.status === 'matched' || event.status === 'approved'
+    );
+
+    // 3. Update Badges
+    if (typeof unmatchedBadge !== 'undefined' && unmatchedBadge) unmatchedBadge.textContent = `${unmatchedEvents.length} Pending`;
+    if (typeof matchedBadge !== 'undefined' && matchedBadge) matchedBadge.textContent = `${matchedEvents.length} Processed`;
+
+    // 4. Render Unmatched
+    if (typeof unmatchedEventTableBody !== 'undefined' && unmatchedEventTableBody) {
+      if (unmatchedEvents.length === 0) {
+        unmatchedEventTableBody.innerHTML = `<tr><td colspan="7" class="empty-cell" style="color: var(--success);">All events have been processed!</td></tr>`;
+      } else {
+        unmatchedEventTableBody.innerHTML = unmatchedEvents.map((event) => `
+          <tr>
+            <td>${event.id || "-"}</td>
+            <td>${event.reported_description || "-"}</td>
+            <td>${event.discipline || "-"}</td>
+            <td><span class="badge" style="background:rgba(255,255,255,0.05); color:var(--text-muted);">${event.event_type || "Update"}</span></td>
+            <td>${event.event_date ? String(event.event_date).split('T')[0] : "-"}</td>
+            <td><strong style="color: var(--brand-teal);">${Number(event.extraction_confidence || 85).toFixed(0)}%</strong></td>
+            <td>
+              <button class="small-button primary-button outline" style="margin-top:0;" onclick="suggestMatch(${event.id})">
+                Match
+              </button>
+            </td>
+          </tr>
+        `).join("");
+      }
     }
+
+    // 5. Render Matched
+    if (typeof matchedEventTableBody !== 'undefined' && matchedEventTableBody) {
+      if (matchedEvents.length === 0) {
+        matchedEventTableBody.innerHTML = `<tr><td colspan="6" class="empty-cell">No events have been processed yet.</td></tr>`;
+      } else {
+        matchedEventTableBody.innerHTML = matchedEvents.map((event) => `
+          <tr>
+            <td>${event.id || "-"}</td>
+            <td>${event.reported_description || "-"}</td>
+            <td>${event.discipline || "-"}</td>
+            <td><span class="badge" style="background:rgba(255,255,255,0.05); color:var(--text-muted);">${event.event_type || "Update"}</span></td>
+            <td>${event.event_date ? String(event.event_date).split('T')[0] : "-"}</td>
+            <td><span class="status-badge completed">Linked</span></td>
+          </tr>
+        `).join("");
+      }
+    }
+  } catch (error) {
+    console.error("The renderEvents function crashed!", error);
+    if (unmatchedEventTableBody) unmatchedEventTableBody.innerHTML = `<tr><td colspan="7" class="empty-cell" style="color: red;">Error loading events. Check console.</td></tr>`;
   }
 }
 
