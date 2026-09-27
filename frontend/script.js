@@ -117,10 +117,8 @@ function renderActivities(activities) {
   `).join("");
 }
 
-function renderEvents(events) {
+function renderEvents(events, pendingMatches = []) {
   try {
-    console.log("Data received from database:", events); // This will print your data in the Console!
-
     // 1. Safety check
     if (!events || !Array.isArray(events)) {
       if (unmatchedEventTableBody) unmatchedEventTableBody.innerHTML = `<tr><td colspan="7" class="empty-cell">No events found in database.</td></tr>`;
@@ -128,13 +126,23 @@ function renderEvents(events) {
       return;
     }
 
-    // 2. Sorting Logic
+    // Extract the IDs of events that are currently sitting in the Planner Review Queue
+    const pendingEventIds = pendingMatches.map(match => match.progress_event_id);
+
+    // 2. Sorting Logic (NOW HIDES ITEMS IN REVIEW QUEUE!)
     const unmatchedEvents = events.filter(event => 
-      !event.is_matched && !event.match_id && event.status !== 'matched' && event.status !== 'approved'
+      !event.is_matched && 
+      !event.match_id && 
+      event.status !== 'matched' && 
+      event.status !== 'approved' &&
+      !pendingEventIds.includes(event.id) // <--- Hides it if it is pending review!
     );
     
     const matchedEvents = events.filter(event => 
-      event.is_matched || event.match_id || event.status === 'matched' || event.status === 'approved'
+      event.is_matched || 
+      event.match_id || 
+      event.status === 'matched' || 
+      event.status === 'approved'
     );
 
     // 3. Update Badges
@@ -344,9 +352,8 @@ async function loadDashboard() {
       document.getElementById("unmatchedCount").textContent = summary.unmatched_progress_events || 0;
     }
 
-    // BULLETPROOF RENDERING: We call this unconditionally. 
-    // The renderEvents function already safely checks if the tables exist inside it.
-    renderEvents(events);
+ // BULLETPROOF RENDERING: Pass pendingMatches so the table can hide items currently under review!
+    renderEvents(events, pendingMatches);
 
     // Dynamic element checking guarantees it works on every page
     if (document.getElementById("activityTableBody")) renderActivities(activities);
@@ -373,10 +380,15 @@ async function loadDashboard() {
 async function suggestMatch(eventId) {
   try {
     const result = await apiRequest(`/api/events/${eventId}/match`, { method: "POST" });
-    showMessage(`AI suggested "${result.suggested_activity_code} — ${result.suggested_activity_name}" with ${result.confidence_score}% confidence.`, "success");
+    showMessage(`AI suggested "${result.suggested_activity_code}" with ${result.confidence_score}% confidence.`, "success");
     await loadDashboard();
   } catch (error) {
-    showMessage(`AI matching failed: ${error.message}`, "error");
+    // Gracefully handle the 409 Conflict
+    if (error.message.includes("409") || String(error).includes("409") || error.message.includes("already exists")) {
+      showMessage("This event is already waiting in your Dashboard review queue!", "warning");
+    } else {
+      showMessage(`AI matching failed: ${error.message}`, "error");
+    }
   }
 }
 
