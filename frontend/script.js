@@ -117,23 +117,76 @@ function renderActivities(activities) {
   `).join("");
 }
 
-function renderEvents(events, pendingMatches = []) {
-  if (!events || !Array.isArray(events)) return;
+function renderEvents(events, pendingMatches = [], allMatches = []) {
+  try {
+    if (!events || !Array.isArray(events)) return;
 
-  const pendingEventIds = pendingMatches.map(match => match.progress_event_id);
+    // 1. Figure out which events are pending or processed by looking at the Matches data
+    const pendingEventIds = pendingMatches.map(match => match.progress_event_id);
+    
+    // Find matches that are approved or rejected
+    const processedMatches = allMatches.filter(match => match.status === 'approved' || match.status === 'rejected');
+    const processedEventIds = processedMatches.map(match => match.progress_event_id);
 
-  // We won't filter anything right now. We will show ALL events in the top table.
-  const unmatchedEvents = events.filter(event => !pendingEventIds.includes(event.id));
+    // 2. Sort the Events based on those IDs
+    const unmatchedEvents = events.filter(event => 
+      !pendingEventIds.includes(event.id) && !processedEventIds.includes(event.id)
+    );
+    
+    const matchedEvents = events.filter(event => processedEventIds.includes(event.id));
 
-  // Render raw data to the screen so we can see exactly what the backend is sending
-  if (unmatchedEventTableBody) {
-    unmatchedEventTableBody.innerHTML = unmatchedEvents.map((event) => `
-      <tr>
-        <td colspan="7" style="text-align: left; font-family: monospace; font-size: 12px; white-space: normal; word-break: break-all; color: var(--text-color);">
-          <strong>Event ID ${event.id}:</strong> ${JSON.stringify(event)}
-        </td>
-      </tr>
-    `).join("");
+    // 3. Update Badges
+    if (typeof unmatchedBadge !== 'undefined' && unmatchedBadge) unmatchedBadge.textContent = `${unmatchedEvents.length} Pending`;
+    if (typeof matchedBadge !== 'undefined' && matchedBadge) matchedBadge.textContent = `${matchedEvents.length} Processed`;
+
+    // 4. Render Unmatched Events
+    if (typeof unmatchedEventTableBody !== 'undefined' && unmatchedEventTableBody) {
+      if (unmatchedEvents.length === 0) {
+        unmatchedEventTableBody.innerHTML = `<tr><td colspan="7" class="empty-cell" style="color: var(--success);"><i class="fa-solid fa-check-double"></i> All events have been processed!</td></tr>`;
+      } else {
+        unmatchedEventTableBody.innerHTML = unmatchedEvents.map((event) => `
+          <tr>
+            <td>${event.id}</td>
+            <td>${event.reported_description}</td>
+            <td>${event.discipline || "-"}</td>
+            <td><span class="badge" style="background:rgba(255,255,255,0.05); color:var(--text-muted);">${event.event_type || "Update"}</span></td>
+            <td>${event.event_date ? String(event.event_date).split('T')[0] : "-"}</td>
+            <td><strong style="color: var(--brand-teal);">${Number(event.extraction_confidence || 85).toFixed(0)}%</strong></td>
+            <td>
+              <button class="small-button primary-button outline" style="margin-top:0;" onclick="suggestMatch(${event.id})">Match</button>
+            </td>
+          </tr>
+        `).join("");
+      }
+    }
+
+    // 5. Render Processed Events (With Approved/Rejected Badges!)
+    if (typeof matchedEventTableBody !== 'undefined' && matchedEventTableBody) {
+      if (matchedEvents.length === 0) {
+        matchedEventTableBody.innerHTML = `<tr><td colspan="6" class="empty-cell">No events have been processed yet.</td></tr>`;
+      } else {
+        matchedEventTableBody.innerHTML = matchedEvents.map((event) => {
+          // Find the specific match decision for this event
+          const matchDecision = processedMatches.find(m => m.progress_event_id === event.id);
+          const isRejected = matchDecision && matchDecision.status === 'rejected';
+          
+          const badgeText = isRejected ? 'Rejected' : 'Approved';
+          const badgeClass = isRejected ? 'delayed' : 'completed'; 
+
+          return `
+          <tr>
+            <td>${event.id}</td>
+            <td>${event.reported_description}</td>
+            <td>${event.discipline || "-"}</td>
+            <td><span class="badge" style="background:rgba(255,255,255,0.05); color:var(--text-muted);">${event.event_type || "Update"}</span></td>
+            <td>${event.event_date ? String(event.event_date).split('T')[0] : "-"}</td>
+            <td><span class="status-badge ${badgeClass}">${badgeText}</span></td>
+          </tr>
+        `}).join("");
+      }
+    }
+  } catch (error) {
+    console.error("Render error:", error);
   }
 }
 
@@ -272,19 +325,19 @@ function renderGanttChart(activities) {
 
 async function loadDashboard() {
   try {
-    const [activities, events, pendingMatches, analytics, institutionalMemory, auditLogs] = await Promise.all([
+    // 1. Fetch all data, adding a safe call for ALL matches
+    const [activities, events, pendingMatches, allMatches, analytics, institutionalMemory, auditLogs] = await Promise.all([
       apiRequest("/api/activities"),
       apiRequest("/api/reports/events/all"),
       apiRequest("/api/matches/pending"),
+      apiRequest("/api/matches").catch(() => []), // NEW: Safely fetches match history
       apiRequest("/api/analytics/summary"),
       apiRequest("/api/insights/institutional-memory"),
       apiRequest("/api/audit-logs"),
     ]);
 
-    // PROTECTED: Check if analytics and project_summary actually exist before assigning
     const summary = analytics ? analytics.project_summary : null;
     
-    // Only update these if we are on the main dashboard page AND summary exists
     if (document.getElementById("activityCount") && summary) {
       document.getElementById("activityCount").textContent = summary.total_schedule_activities || 0;
       document.getElementById("completedCount").textContent = summary.completed_activities || 0;
@@ -294,28 +347,20 @@ async function loadDashboard() {
       document.getElementById("unmatchedCount").textContent = summary.unmatched_progress_events || 0;
     }
 
- // BULLETPROOF RENDERING: Pass pendingMatches so the table can hide items currently under review!
-    renderEvents(events, pendingMatches);
+    // 2. Pass BOTH pending and historical matches to the render function!
+    renderEvents(events, pendingMatches, allMatches);
 
-    // Dynamic element checking guarantees it works on every page
+    // ... (Keep the rest of your loadDashboard function exactly the same below this)
     if (document.getElementById("activityTableBody")) renderActivities(activities);
     if (document.getElementById("pendingMatchList")) renderPendingMatches(pendingMatches);
-    
-    if (document.getElementById("disciplineTableBody") && analytics && analytics.discipline_summary) {
-      renderDisciplineSummary(analytics.discipline_summary);
-    }
-    
+    if (document.getElementById("disciplineTableBody") && analytics && analytics.discipline_summary) renderDisciplineSummary(analytics.discipline_summary);
     if (document.getElementById("memoryTableBody")) renderInstitutionalMemory(institutionalMemory);
     if (document.getElementById("auditTableBody")) renderAuditLogs(auditLogs);
-    
-    // Render the Gantt Chart (if the function exists)
     if (typeof renderGanttChart === 'function') renderGanttChart(activities);
     
   } catch (error) {
-    console.error("Dashboard loading error:", error); // This ensures errors actually print to the console!
-    if (typeof showMessage === 'function') {
-      showMessage(`Dashboard error: ${error.message}`, "error");
-    }
+    console.error("Dashboard loading error:", error);
+    if (typeof showMessage === 'function') showMessage(`Dashboard error: ${error.message}`, "error");
   }
 }
 
