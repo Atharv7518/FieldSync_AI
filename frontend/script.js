@@ -9,15 +9,16 @@ const delayedCount = document.getElementById("delayedCount");
 const unmatchedCount = document.getElementById("unmatchedCount");
 
 const activityTableBody = document.getElementById("activityTableBody");
+const pendingMatchList = document.getElementById("pendingMatchList");
+const disciplineTableBody = document.getElementById("disciplineTableBody");
+const memoryTableBody = document.getElementById("memoryTableBody");
+const auditTableBody = document.getElementById("auditTableBody");
+
+// NEW Split Event Tables
 const unmatchedEventTableBody = document.getElementById("unmatchedEventTableBody");
 const matchedEventTableBody = document.getElementById("matchedEventTableBody");
 const unmatchedBadge = document.getElementById("unmatchedBadge");
 const matchedBadge = document.getElementById("matchedBadge");
-const pendingMatchList = document.getElementById("pendingMatchList");
-
-const disciplineTableBody = document.getElementById("disciplineTableBody");
-const memoryTableBody = document.getElementById("memoryTableBody");
-const auditTableBody = document.getElementById("auditTableBody");
 
 const messageBox = document.getElementById("messageBox");
 const apiDot = document.getElementById("apiDot");
@@ -324,13 +325,13 @@ async function loadDashboard() {
 
     // Only render tables if they exist on the current HTML page
     if (activityTableBody) renderActivities(activities);
-    if (typeof unmatchedEventTableBody !== 'undefined' || typeof matchedEventTableBody !== 'undefined') renderEvents(events);
+    if (unmatchedEventTableBody || matchedEventTableBody) renderEvents(events);
     if (pendingMatchList) renderPendingMatches(pendingMatches);
     if (disciplineTableBody) renderDisciplineSummary(analytics.discipline_summary);
     if (memoryTableBody) renderInstitutionalMemory(institutionalMemory);
     if (auditTableBody) renderAuditLogs(auditLogs);
     
-    // Render the Gantt Chart
+    // Render the Gantt Chart (if the function exists)
     if (typeof renderGanttChart === 'function') renderGanttChart(activities);
     
   } catch (error) {
