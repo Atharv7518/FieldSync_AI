@@ -129,30 +129,39 @@ function renderEvents(events, pendingMatches = []) {
     // Extract the IDs of events that are currently sitting in the Planner Review Queue
     const pendingEventIds = pendingMatches.map(match => match.progress_event_id);
 
-    // 2. Sorting Logic (NOW HIDES ITEMS IN REVIEW QUEUE!)
+    // 2. Sorting Logic: Move BOTH Approved and Rejected to the Processed list
     const unmatchedEvents = events.filter(event => 
       !event.is_matched && 
       !event.match_id && 
-      event.status !== 'matched' && 
-      event.status !== 'approved' &&
-      !pendingEventIds.includes(event.id) // <--- Hides it if it is pending review!
+      // Ensure we don't catch construction status like "completed" by mistake
+      event.status !== 'approved' && 
+      event.status !== 'rejected' &&
+      event.review_status !== 'approved' && 
+      event.review_status !== 'rejected' &&
+      event.processing_status !== 'approved' &&
+      event.processing_status !== 'rejected' &&
+      !pendingEventIds.includes(event.id) // Hides it if it is pending review!
     );
     
     const matchedEvents = events.filter(event => 
       event.is_matched || 
       event.match_id || 
-      event.status === 'matched' || 
-      event.status === 'approved'
+      event.status === 'approved' || 
+      event.status === 'rejected' ||
+      event.review_status === 'approved' || 
+      event.review_status === 'rejected' ||
+      event.processing_status === 'approved' ||
+      event.processing_status === 'rejected'
     );
 
     // 3. Update Badges
     if (typeof unmatchedBadge !== 'undefined' && unmatchedBadge) unmatchedBadge.textContent = `${unmatchedEvents.length} Pending`;
     if (typeof matchedBadge !== 'undefined' && matchedBadge) matchedBadge.textContent = `${matchedEvents.length} Processed`;
 
-    // 4. Render Unmatched
+    // 4. Render Unmatched (Same as before)
     if (typeof unmatchedEventTableBody !== 'undefined' && unmatchedEventTableBody) {
       if (unmatchedEvents.length === 0) {
-        unmatchedEventTableBody.innerHTML = `<tr><td colspan="7" class="empty-cell" style="color: var(--success);">All events have been processed!</td></tr>`;
+        unmatchedEventTableBody.innerHTML = `<tr><td colspan="7" class="empty-cell" style="color: var(--success);"><i class="fa-solid fa-check-double"></i> All events have been processed!</td></tr>`;
       } else {
         unmatchedEventTableBody.innerHTML = unmatchedEvents.map((event) => `
           <tr>
@@ -172,21 +181,30 @@ function renderEvents(events, pendingMatches = []) {
       }
     }
 
-    // 5. Render Matched
+    // 5. Render Matched (NOW DYNAMICALLY SHOWS APPROVED OR REJECTED)
     if (typeof matchedEventTableBody !== 'undefined' && matchedEventTableBody) {
       if (matchedEvents.length === 0) {
         matchedEventTableBody.innerHTML = `<tr><td colspan="6" class="empty-cell">No events have been processed yet.</td></tr>`;
       } else {
-        matchedEventTableBody.innerHTML = matchedEvents.map((event) => `
+        matchedEventTableBody.innerHTML = matchedEvents.map((event) => {
+          
+          // Check if the event was flagged as rejected in any of the possible backend columns
+          const isRejected = event.status === 'rejected' || event.review_status === 'rejected' || event.processing_status === 'rejected';
+          
+          // Set the visual text and CSS class (using your delayed class for red/warning color)
+          const badgeText = isRejected ? 'Rejected' : 'Approved';
+          const badgeClass = isRejected ? 'delayed' : 'completed'; 
+
+          return `
           <tr>
             <td>${event.id || "-"}</td>
             <td>${event.reported_description || "-"}</td>
             <td>${event.discipline || "-"}</td>
             <td><span class="badge" style="background:rgba(255,255,255,0.05); color:var(--text-muted);">${event.event_type || "Update"}</span></td>
             <td>${event.event_date ? String(event.event_date).split('T')[0] : "-"}</td>
-            <td><span class="status-badge completed">Linked</span></td>
+            <td><span class="status-badge ${badgeClass}">${badgeText}</span></td>
           </tr>
-        `).join("");
+        `}).join("");
       }
     }
   } catch (error) {
