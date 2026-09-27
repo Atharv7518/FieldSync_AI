@@ -324,13 +324,14 @@ async function loadDashboard() {
 
     // Only render tables if they exist on the current HTML page
     if (activityTableBody) renderActivities(activities);
-    if (eventTableBody) renderEvents(events);
-    if (unmatchedEventTableBody || matchedEventTableBody) renderEvents(events);
+    if (typeof unmatchedEventTableBody !== 'undefined' || typeof matchedEventTableBody !== 'undefined') renderEvents(events);
     if (pendingMatchList) renderPendingMatches(pendingMatches);
     if (disciplineTableBody) renderDisciplineSummary(analytics.discipline_summary);
     if (memoryTableBody) renderInstitutionalMemory(institutionalMemory);
     if (auditTableBody) renderAuditLogs(auditLogs);
-    renderGanttChart(activities);
+    
+    // Render the Gantt Chart
+    if (typeof renderGanttChart === 'function') renderGanttChart(activities);
     
   } catch (error) {
     showMessage(`Dashboard error: ${error.message}`, "error");
