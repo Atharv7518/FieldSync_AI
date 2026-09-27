@@ -20,6 +20,9 @@ const matchedEventTableBody = document.getElementById("matchedEventTableBody");
 const unmatchedBadge = document.getElementById("unmatchedBadge");
 const matchedBadge = document.getElementById("matchedBadge");
 
+// This tricks fetch logic into running on the Events page!   
+const eventTableBody = unmatchedEventTableBody || matchedEventTableBody;
+
 const messageBox = document.getElementById("messageBox");
 const apiDot = document.getElementById("apiDot");
 const apiStatus = document.getElementById("apiStatus");
@@ -343,7 +346,7 @@ async function loadDashboard() {
 
     // Only render tables if they exist on the current HTML page
     if (activityTableBody) renderActivities(activities);
-    if (unmatchedEventTableBody || matchedEventTableBody) renderEvents(events);
+    if (eventTableBody) renderEvents(events);
     if (pendingMatchList) renderPendingMatches(pendingMatches);
     if (disciplineTableBody) renderDisciplineSummary(analytics.discipline_summary);
     if (memoryTableBody) renderInstitutionalMemory(institutionalMemory);
