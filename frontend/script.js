@@ -1,5 +1,7 @@
 const API_BASE_URL = "https://fieldsync-ai-9aqn.onrender.com";
 
+// const API_BASE_URL = "http://127.0.0.1:8000"; // Local development server
+
 // DOM Elements
 const activityCount = document.getElementById("activityCount");
 const completedCount = document.getElementById("completedCount");
@@ -121,11 +123,13 @@ function renderEvents(events, pendingMatches = [], allMatches = []) {
   try {
     if (!events || !Array.isArray(events)) return;
 
-    // 1. Figure out which events are pending or processed by looking at the Matches data
+    // 1. Figure out which events are pending or processed
     const pendingEventIds = pendingMatches.map(match => match.progress_event_id);
     
-    // Find matches that are approved or rejected
-    const processedMatches = allMatches.filter(match => match.status === 'approved' || match.status === 'rejected');
+    // FIX: Use 'review_status' to match the Python database schema
+    const processedMatches = allMatches.filter(match => 
+      match.review_status === 'approved' || match.review_status === 'rejected'
+    );
     const processedEventIds = processedMatches.map(match => match.progress_event_id);
 
     // 2. Sort the Events based on those IDs
@@ -160,15 +164,15 @@ function renderEvents(events, pendingMatches = [], allMatches = []) {
       }
     }
 
-    // 5. Render Processed Events (With Approved/Rejected Badges!)
+    // 5. Render Processed Events (With Approved/Rejected Badges)
     if (typeof matchedEventTableBody !== 'undefined' && matchedEventTableBody) {
       if (matchedEvents.length === 0) {
         matchedEventTableBody.innerHTML = `<tr><td colspan="6" class="empty-cell">No events have been processed yet.</td></tr>`;
       } else {
         matchedEventTableBody.innerHTML = matchedEvents.map((event) => {
-          // Find the specific match decision for this event
+          // FIX: Cross-reference using 'review_status'
           const matchDecision = processedMatches.find(m => m.progress_event_id === event.id);
-          const isRejected = matchDecision && matchDecision.status === 'rejected';
+          const isRejected = matchDecision && matchDecision.review_status === 'rejected';
           
           const badgeText = isRejected ? 'Rejected' : 'Approved';
           const badgeClass = isRejected ? 'delayed' : 'completed'; 
